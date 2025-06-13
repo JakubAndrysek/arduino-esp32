@@ -1,6 +1,6 @@
 name: Pushbutton counter test
 version: 1
-author: Jan Prochazka (jan.prochazka@espressif.com)
+author: Jan Prochazka (jan.prochazka@espressif.com) + Jakub Andrysek (jakub.andrysek@espressif.com)
 
 steps:
   #### GPIO read - basic test
@@ -12,7 +12,7 @@ steps:
       part-id: btn1
       control: pressed
       value: 1
-      
+
   - wait-serial: "BTN read as LOW"
 
   # Set the button to LOW
@@ -43,6 +43,6 @@ steps:
       pin: A # Anode pin
       value: 0
 
-  
+
   #### GPIO end test
   - wait-serial: "GPIO test END"
