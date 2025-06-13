@@ -3,38 +3,46 @@ version: 1
 author: Jan Prochazka (jan.prochazka@espressif.com)
 
 steps:
-  - wait-serial: "Button test"
+  #### GPIO read - basic test
+  - wait-serial: "GPIO read - basic START"
+  - wait-serial: "BTN read as HIGH after pinMode INPUT_PULLUP"
 
-  # Need for 1s delay for scenario to run properly
-  - delay: 5000ms
-
-  # Press once
+  # Set the button to HIGH
   - set-control:
       part-id: btn1
       control: pressed
       value: 1
-  - delay: 2000ms
+      
+  - wait-serial: "BTN read as LOW"
+
+  # Set the button to LOW
   - set-control:
       part-id: btn1
       control: pressed
       value: 0
-  - delay: 3000ms
+  - wait-serial: "BTN read as HIGH"
 
-  # Press 2nd time
-  - set-control:
-      part-id: btn1
-      control: pressed
-      value: 1
-  - delay: 2000ms
-  - set-control:
-      part-id: btn1
-      control: pressed
+
+
+  #### GPIO write - basic test
+  - wait-serial: "GPIO write - basic START"
+  - wait-serial: "GPIO LED set to OUTPUT"
+  - expect-pin:
+      part-id: led1
+      pin: A # Anode pin
       value: 0
-  - delay: 3000ms
 
-  # Press for the 3rd time
-  - set-control:
-      part-id: btn1
-      control: pressed
+  - wait-serial: 'LED set to HIGH'
+  - expect-pin:
+      part-id: led1
+      pin: A # Anode pin
       value: 1
-  - wait-serial: "Button pressed 3 times"
+  - wait-serial: 'LED set to LOW'
+  - expect-pin:
+      part-id: led1
+      pin: A # Anode pin
+      value: 0
+
+  
+  #### GPIO end test
+  - wait-serial: "GPIO test END"
