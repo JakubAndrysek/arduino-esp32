@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <unity.h>
+#include <wokwi.h>
 
 
 #define BTN 0
@@ -49,7 +50,7 @@ void IRAM_ATTR buttonISRWithArg(void *arg) {
 }
 
 void test_interrupt_attach_detach(void) {
-  Serial.println("GPIO interrupt - attach/detach test START");
+  wokwi_wait_for_serial("GPIO interrupt - attach/detach test START");
 
   pinMode(BTN, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
@@ -61,59 +62,38 @@ void test_interrupt_attach_detach(void) {
 
   // Attach interrupt on falling edge (button press)
   attachInterrupt(digitalPinToInterrupt(BTN), buttonISR, FALLING);
-  Serial.println("Interrupt attached - FALLING edge");
 
-  // Wait for first button press
-  delay(1000);
-  Serial.println("Press button to trigger interrupt");
+  // Simulate button press using Wokwi
+  wokwi_simulate_button_press("btn1", 200);
 
   // Wait for interrupt to be triggered
-  unsigned long startTime = millis();
-  while (!interruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
-  TEST_ASSERT_TRUE(interruptFlag);
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_EQUAL(1, interruptCounter);
-  Serial.println("First interrupt triggered successfully");
 
   // Reset flag for next test
   interruptFlag = false;
 
-  // Wait for second button press
-  delay(1000);
-  Serial.println("Press button again to trigger second interrupt");
+  // Simulate second button press
+  wokwi_simulate_button_press("btn1", 200);
 
-  startTime = millis();
-  while (!interruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
-  TEST_ASSERT_TRUE(interruptFlag);
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_EQUAL(2, interruptCounter);
-  Serial.println("Second interrupt triggered successfully");
 
-  // Now detach interrupt
   detachInterrupt(digitalPinToInterrupt(BTN));
-  Serial.println("Interrupt detached");
 
   // Reset counters and test that interrupt no longer works
   interruptCounter = 0;
   interruptFlag = false;
 
-  delay(1000);
-  Serial.println("Press button - should NOT trigger interrupt");
+  // Simulate button press (should not trigger interrupt)
+  wokwi_simulate_button_press("btn1", 200);
+  wokwi_delay(3000);
 
-  // Wait and verify no interrupt occurs
-  delay(3000);
   TEST_ASSERT_FALSE(interruptFlag);
   TEST_ASSERT_EQUAL(0, interruptCounter);
-  Serial.println("No interrupt triggered after detach - SUCCESS");
 }
 
 void test_interrupt_rising_falling(void) {
-  Serial.println("GPIO interrupt - rising/falling edge test START");
-
   pinMode(BTN, INPUT_PULLUP);
 
   // Test FALLING edge
@@ -121,19 +101,14 @@ void test_interrupt_rising_falling(void) {
   interruptFlag = false;
 
   attachInterrupt(digitalPinToInterrupt(BTN), buttonISR, FALLING);
-  Serial.println("Testing FALLING edge interrupt");
 
-  delay(1000);
-  Serial.println("Press button for FALLING edge test");
+  // Simulate button press (falling edge)
+  wokwi_press_button("btn1");
 
-  unsigned long startTime = millis();
-  while (!interruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
 
-  TEST_ASSERT_TRUE(interruptFlag);
-  Serial.println("FALLING edge interrupt worked");
-
+  // Release button for next test
+  wokwi_release_button("btn1");
   detachInterrupt(digitalPinToInterrupt(BTN));
 
   // Test RISING edge
@@ -141,60 +116,48 @@ void test_interrupt_rising_falling(void) {
   interruptFlag = false;
 
   attachInterrupt(digitalPinToInterrupt(BTN), buttonISR, RISING);
-  Serial.println("Testing RISING edge interrupt");
 
-  delay(1000);
-  Serial.println("Release button for RISING edge test");
+  // First press button (no interrupt expected)
+  wokwi_press_button("btn1");
+  wokwi_delay(500);
 
-  startTime = millis();
-  while (!interruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
+  // Then release button (rising edge - should trigger interrupt)
+  wokwi_release_button("btn1");
 
-  TEST_ASSERT_TRUE(interruptFlag);
-  Serial.println("RISING edge interrupt worked");
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
 
   detachInterrupt(digitalPinToInterrupt(BTN));
 }
 
 void test_interrupt_change(void) {
-  Serial.println("GPIO interrupt - CHANGE edge test START");
-
   pinMode(BTN, INPUT_PULLUP);
 
   interruptCounter = 0;
   interruptFlag = false;
 
   attachInterrupt(digitalPinToInterrupt(BTN), buttonISR, CHANGE);
-  Serial.println("Testing CHANGE edge interrupt");
 
-  delay(1000);
-  Serial.println("Press and release button for CHANGE test");
+  // Simulate button press (falling edge - should trigger interrupt)
+  wokwi_press_button("btn1");
 
   // Wait for button press (falling edge)
-  unsigned long startTime = millis();
-  while (interruptCounter < 1 && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_GREATER_OR_EQUAL(1, interruptCounter);
-  Serial.println("Button press detected");
+
+  // Reset flag for release detection
+  interruptFlag = false;
+
+  // Simulate button release (rising edge - should trigger interrupt again)
+  wokwi_release_button("btn1");
 
   // Wait for button release (rising edge)
-  startTime = millis();
-  while (interruptCounter < 2 && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_GREATER_OR_EQUAL(2, interruptCounter);
-  Serial.println("Button release detected - CHANGE interrupt worked");
 
   detachInterrupt(digitalPinToInterrupt(BTN));
 }
 
 void test_interrupt_with_arg(void) {
-  Serial.println("GPIO interrupt - attachInterruptArg test START");
-
   pinMode(BTN, INPUT_PULLUP);
 
   // Test data to pass to interrupt
@@ -207,23 +170,14 @@ void test_interrupt_with_arg(void) {
 
   // Attach interrupt with argument on falling edge (button press)
   attachInterruptArg(digitalPinToInterrupt(BTN), buttonISRWithArg, &testArg, FALLING);
-  Serial.println("Interrupt with argument attached - FALLING edge");
 
-  delay(1000);
-  Serial.println("Press button to trigger interrupt with argument");
+  // Simulate button press
+  wokwi_simulate_button_press("btn1", 200);
 
   // Wait for interrupt to be triggered
-  unsigned long startTime = millis();
-  while (!argInterruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
-  TEST_ASSERT_TRUE(argInterruptFlag);
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_EQUAL(1, argInterruptCounter);
   TEST_ASSERT_EQUAL(42, receivedArg);
-  Serial.println("Interrupt with argument triggered successfully");
-  Serial.print("Received argument value: ");
-  Serial.println(receivedArg);
 
   // Test with different argument value
   argInterruptFlag = false;
@@ -232,56 +186,49 @@ void test_interrupt_with_arg(void) {
   // Detach and reattach with new argument
   detachInterrupt(digitalPinToInterrupt(BTN));
   attachInterruptArg(digitalPinToInterrupt(BTN), buttonISRWithArg, &newTestArg, FALLING);
-  Serial.println("Interrupt reattached with new argument value");
 
-  delay(1000);
-  Serial.println("Press button again to test new argument");
+  // Simulate second button press
+  wokwi_simulate_button_press("btn1", 200);
 
-  startTime = millis();
-  while (!argInterruptFlag && (millis() - startTime < 5000)) {
-    delay(10);
-  }
-
-  TEST_ASSERT_TRUE(argInterruptFlag);
+  TEST_ASSERT_TRUE(wokwi_wait_for_interrupt(5000));
   TEST_ASSERT_EQUAL(2, argInterruptCounter);
   TEST_ASSERT_EQUAL(123, receivedArg);
-  Serial.println("Second interrupt with new argument triggered successfully");
-  Serial.print("New received argument value: ");
-  Serial.println(receivedArg);
 
   detachInterrupt(digitalPinToInterrupt(BTN));
-  Serial.println("Interrupt with argument test completed");
 }
 
 
 void test_read_basic(void) {
   pinMode(BTN, INPUT_PULLUP);
   TEST_ASSERT_EQUAL(HIGH, digitalRead(BTN));
-  Serial.println("BTN read as HIGH after pinMode INPUT_PULLUP");
 
-  delay(1000);
+  wokwi_press_button("btn1");
+
   TEST_ASSERT_EQUAL(LOW, digitalRead(BTN));
-  Serial.println("BTN read as LOW");
 
-  delay(1000);
+  wokwi_release_button("btn1");
   TEST_ASSERT_EQUAL(HIGH, digitalRead(BTN));
-  Serial.println("BTN read as HIGH");
 }
 
 void test_write_basic(void) {
-  Serial.println("GPIO write - basic START");
   pinMode(LED, OUTPUT);
-  delay(1000);
-  Serial.println("GPIO LED set to OUTPUT");
-  delay(2000);
+
+  // Check initial LED state
+  double initialState = wokwi_get_led_state("led1");
+  TEST_ASSERT_EQUAL(LOW, (int)initialState); // Ensure LED is off initially
 
   digitalWrite(LED, HIGH);
-  delay(1000);
-  Serial.println("LED set to HIGH");
 
-  delay(3000);
+  // Verify LED state through Wokwi
+  double ledState = wokwi_get_led_state("led1");
+  TEST_ASSERT_EQUAL(HIGH, (int)ledState);
+
+  wokwi_delay(3000);
   digitalWrite(LED, LOW);
-  Serial.println("LED set to LOW");
+
+  // Verify LED is now off
+  ledState = wokwi_get_led_state("led1");
+  TEST_ASSERT_EQUAL(LOW, (int)ledState);
 }
 
 
