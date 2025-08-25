@@ -863,7 +863,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1009487,
+                            "flash_bytes": 1009503,
                             "flash_percentage": 77,
                             "ram_bytes": 49672,
                             "ram_percentage": 15
