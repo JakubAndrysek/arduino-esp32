@@ -1,0 +1,43 @@
+name: ADC potentiometer test
+version: 1
+author: Jakub Andrysek (jakub.andrysek@espressif.com)
+
+steps:
+  #### ADC potentiometer test
+  - wait-serial: "ADC potentiometer test START"
+  - wait-serial: "Reading ADC values from potentiometer on GPIO2"
+
+  # Set potentiometer to different positions and wait for readings
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0.0
+  - wait-serial: "ADC Reading 1:"
+
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0.25
+  - wait-serial: "ADC Reading 2:"
+
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0.5
+  - wait-serial: "ADC Reading 3:"
+
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0.75
+  - wait-serial: "ADC Reading 4:"
+
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 1.0
+  - wait-serial: "ADC Reading 5:"
+
+  - wait-serial: "ADC potentiometer test completed successfully"
+
+  - wait-serial: "ADC test END"
