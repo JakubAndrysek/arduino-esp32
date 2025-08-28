@@ -8,4 +8,4 @@ pytest-embedded-arduino @ git+https://github.com/JakubAndrysek/pytest-embedded.g
 pytest-embedded-wokwi @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-wokwi
 pytest-embedded-qemu @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-qemu
 pytest-embedded @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded
-esptool==5.0.2
+esptool
