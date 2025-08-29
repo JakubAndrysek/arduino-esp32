@@ -3,9 +3,13 @@ cryptography==44.0.1
 pytest-cov==5.0.0
 
 # Temporary dependencies until the Wokwi client and Pytest-Embedded are released
-pytest-embedded-serial-esp @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-serial-esp
-pytest-embedded-arduino @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-arduino
-pytest-embedded-wokwi @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-wokwi
-pytest-embedded-qemu @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded-qemu
-pytest-embedded @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client#subdirectory=pytest-embedded
+pytest-embedded-serial-esp @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client-no-deps#subdirectory=pytest-embedded-serial-esp
+pytest-embedded-arduino @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client-no-deps#subdirectory=pytest-embedded-arduino
+pytest-embedded-wokwi @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client-no-deps#subdirectory=pytest-embedded-wokwi
+pytest-embedded-qemu @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client-no-deps#subdirectory=pytest-embedded-qemu
+pytest-embedded @ git+https://github.com/JakubAndrysek/pytest-embedded.git@wokwi-python-client-no-deps#subdirectory=pytest-embedded
+
+
+wokwi-client @ git+https://github.com/JakubAndrysek/wokwi-python-client.git@refactor-sync-client
+
 esptool
