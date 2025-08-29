@@ -35,6 +35,7 @@ extensions += [  # noqa: F405
     "sphinx_tabs.tabs",
     "sphinx_substitution_extensions",  # For allowing substitutions inside code blocks
     "esp_docs.esp_extensions.dummy_build_system",
+    # "sphinx_wokwi"
 ]
 
 # ESP32_DOCS = [
@@ -60,3 +61,6 @@ extensions += [  # noqa: F405
 project_slug = "arduino-esp32"
 
 # versions_url = "./../_static/arduino_versions.js"
+
+
+wokwi_json_prefix = "https://it.kubaandrysek.cz/wokwi"

@@ -23,3 +23,34 @@ This documentation is valid for the Arduino Core for ESP32 version |version| bas
    Troubleshooting <troubleshooting>
    Contributing <contributing>
    External Libraries Testing <external_libraries_test>
+
+
+.. .. wokwi::
+..    :diagram: https://it.kubaandrysek.cz/wokwi/diagram.json
+..    :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
+
+
+.. other
+
+
+.. .. wokwi-tabs::
+..    .. wokwi::
+..       :name: ESP32
+..       :diagram: https://it.kubaandrysek.cz/wokwi/diagram.json
+..       :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
+
+..    .. wokwi::
+..       :name: ESP32-C3
+..       :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
+
+..    .. wokwi::
+..       :name: ESP32-P4
+..       :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
+
+..    .. wokwi::
+..       :name: ESP32-S3
+..       :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
+
+..    .. wokwi::
+..       :name: ESP32-C2
+..       :firmware: https://it.kubaandrysek.cz/wokwi/uf2.bin
