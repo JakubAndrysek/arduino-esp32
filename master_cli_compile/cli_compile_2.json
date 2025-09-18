@@ -951,7 +951,7 @@
                     },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1083811,
+                            "flash_bytes": 1083795,
                             "flash_percentage": 6,
                             "ram_bytes": 67532,
                             "ram_percentage": 20
