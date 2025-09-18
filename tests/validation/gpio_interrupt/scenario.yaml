@@ -1,0 +1,141 @@
+name: GPIO interrupt test
+version: 1
+author: Jakub Andrysek (jakub.andrysek@espressif.com)
+
+steps:
+  #### GPIO interrupt - attach/detach test
+  - wait-serial: "GPIO interrupt - attach/detach test START"
+  - wait-serial: "Interrupt attached - FALLING edge"
+  - wait-serial: "Press button to trigger interrupt"
+
+  # Simulate button press (falling edge)
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "First interrupt triggered successfully"
+  - wait-serial: "Press button again to trigger second interrupt"
+
+  # Simulate button release and press again
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "Second interrupt triggered successfully"
+  - wait-serial: "Interrupt detached"
+  - wait-serial: "Press button - should NOT trigger interrupt"
+
+  # Try to trigger interrupt after detach - should not work
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "No interrupt triggered after detach - SUCCESS"
+
+  #### GPIO interrupt - rising/falling edge test
+  - wait-serial: "GPIO interrupt - rising/falling edge test START"
+  - wait-serial: "Testing FALLING edge interrupt"
+  - wait-serial: "Press button for FALLING edge test"
+
+  # Ensure button starts unpressed, wait a bit, then press it (falling edge)
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 200ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "FALLING edge interrupt worked"
+  - wait-serial: "Testing RISING edge interrupt"
+  - wait-serial: "Release button for RISING edge test"
+
+  # Test rising edge (release button) - button should already be pressed from previous test
+  - delay: 200ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+
+  - wait-serial: "RISING edge interrupt worked"
+
+  #### GPIO interrupt - CHANGE edge test
+  - wait-serial: "GPIO interrupt - CHANGE edge test START"
+  - wait-serial: "Testing CHANGE edge interrupt"
+  - wait-serial: "Press and release button for CHANGE test"
+
+  # Ensure button starts unpressed, then press it (falling edge - first change)
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "Button press detected"
+
+  # Release button (rising edge - second change)
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+
+  - wait-serial: "Button release detected - CHANGE interrupt worked"
+
+  #### GPIO interrupt - attachInterruptArg test
+  - wait-serial: "GPIO interrupt - attachInterruptArg test START"
+  - wait-serial: "Interrupt with argument attached - FALLING edge"
+  - wait-serial: "Press button to trigger interrupt with argument"
+
+  # Ensure button starts unpressed, then press it to trigger interrupt with argument
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "Interrupt with argument triggered successfully"
+  - wait-serial: "Received argument value: 42"
+  - wait-serial: "Interrupt reattached with new argument value"
+  - wait-serial: "Press button again to test new argument"
+
+  # Press button again to test new argument value
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 100ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+
+  - wait-serial: "Second interrupt with new argument triggered successfully"
+  - wait-serial: "New received argument value: 123"
+  - wait-serial: "Interrupt with argument test completed"
+
+  #### GPIO interrupt test end
+  - wait-serial: "GPIO interrupt test END"
