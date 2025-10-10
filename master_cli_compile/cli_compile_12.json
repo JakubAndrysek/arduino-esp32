@@ -475,7 +475,7 @@
                     },
 {"name": "libraries/WiFi/examples/WiFiMultiAdvanced",
                     "sizes": [{
-                            "flash_bytes": 960794,
+                            "flash_bytes": 960786,
                             "flash_percentage": 73,
                             "ram_bytes": 40508,
                             "ram_percentage": 12
