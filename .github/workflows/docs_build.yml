@@ -1,6 +1,18 @@
 name: Documentation Build and Deploy CI
 
 on:
+  # Wait for Compilation Tests workflow to complete (uses macOS binaries)
+  workflow_run:
+    workflows: ["Compilation Tests"]
+    types:
+      - completed
+    branches:
+      - master
+      - release/v2.x
+      - wokwi-embed-launchpad
+  # Manual trigger for testing docs changes without waiting for compilation
+  workflow_dispatch:
+  # Also run on direct pushes to docs or workflow files (for testing)
   push:
     branches:
       - master
@@ -35,48 +47,48 @@ jobs:
           cache: "pip"
           python-version: "3.10"
 
-      - name: Restore compiled binaries from cache
+      - name: Restore docs binaries from cache (macOS builds)
         id: cache-restore
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          key: compiled-binaries-consolidated-${{ github.sha }}
+          key: docs-binaries-macos-${{ github.event.workflow_run.head_sha || github.sha }}
           restore-keys: |
-            compiled-binaries-consolidated-
-          path: compiled_binaries
+            docs-binaries-macos-
+          path: docs_binaries
           lookup-only: false
 
-      - name: Download compiled binaries artifact (fallback)
+      - name: Download docs binaries artifact (fallback)
         if: steps.cache-restore.outputs.cache-hit != 'true'
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
-          name: compiled-binaries-consolidated
-          path: compiled_binaries
+          name: docs-binaries-macos
+          path: docs_binaries
         continue-on-error: true
 
       - name: Debug - List cached binaries structure
         run: |
           echo "=========================================="
-          echo "Debugging cached binaries structure"
+          echo "Debugging cached binaries structure (macOS builds)"
           echo "=========================================="
-          if [ -d "compiled_binaries" ]; then
-            echo "✓ compiled_binaries directory exists"
+          if [ -d "docs_binaries" ]; then
+            echo "✓ docs_binaries directory exists"
             echo ""
             echo "Directory tree (first 50 entries):"
-            find compiled_binaries -type f | head -50 | sort
+            find docs_binaries -type f | head -50 | sort
             echo ""
             echo "Binary files (.bin):"
-            find compiled_binaries -type f -name "*.bin" | head -30
+            find docs_binaries -type f -name "*.bin" | head -30
             echo ""
             echo "ELF files:"
-            find compiled_binaries -type f -name "*.elf" | head -30
+            find docs_binaries -type f -name "*.elf" | head -30
             echo ""
-            echo "Total binary files: $(find compiled_binaries -type f -name "*.bin" | wc -l)"
-            echo "Total ELF files: $(find compiled_binaries -type f -name "*.elf" | wc -l)"
+            echo "Total binary files: $(find docs_binaries -type f -name "*.bin" | wc -l)"
+            echo "Total ELF files: $(find docs_binaries -type f -name "*.elf" | wc -l)"
             echo ""
             echo "Sample directory structure:"
-            ls -la compiled_binaries/ || true
+            ls -la docs_binaries/ || true
           else
-            echo "✗ compiled_binaries directory NOT found"
+            echo "✗ docs_binaries directory NOT found"
             echo "WARNING: No cached binaries available!"
           fi
           echo "=========================================="
@@ -86,25 +98,25 @@ jobs:
           echo "Copying cached binaries to docs/_static/binaries/"
           mkdir -p docs/_static/binaries
           
-          if [ ! -d "compiled_binaries" ]; then
-            echo "ERROR: No compiled_binaries directory found!"
+          if [ ! -d "docs_binaries" ]; then
+            echo "ERROR: No docs_binaries directory found!"
             echo "Cannot proceed without binaries. Exiting."
             exit 1
           fi
           
-          # Find all .bin files in compiled_binaries
-          echo "Processing binary files..."
+          # Find all .bin files in docs_binaries
+          echo "Processing binary files from macOS builds..."
           bin_count=0
           skip_count=0
           
           # Binaries are stored in structure like:
-          # compiled_binaries/{home}/.arduino/tests/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
+          # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
           # We need to:
           # 1. Extract sketch name and target from path
           # 2. Find the sketch in libraries/ directory
           # 3. Copy to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
           
-          find compiled_binaries -type f -name "*.bin" | while read -r bin_file; do
+          find docs_binaries -type f -name "*.bin" | while read -r bin_file; do
             echo "Processing: $bin_file"
             
             # Extract the binary filename (e.g., WiFiClientSecure.ino.bin)
