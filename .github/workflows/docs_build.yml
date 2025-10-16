@@ -158,10 +158,17 @@ jobs:
             output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
             mkdir -p "$output_dir"
 
-            # Copy only the .merged.bin file
+            # Copy the .merged.bin file
             cp "$bin_file" "$output_dir/"
             echo "  → Copied to: $output_dir/$bin_name"
             bin_count=$((bin_count + 1))
+
+            # Also copy ci.json if it exists in the same directory
+            ci_json_file=$(dirname "$bin_file")/ci.json
+            if [ -f "$ci_json_file" ]; then
+              cp "$ci_json_file" "$output_dir/"
+              echo "  → Copied ci.json to: $output_dir/ci.json"
+            fi
           done < <(find docs_binaries -type f -name "*.merged.bin")
           
           echo ""
