@@ -95,7 +95,7 @@ jobs:
 
       - name: Copy cached binaries to docs/_static/binaries/
         run: |
-          echo "Copying cached binaries to docs/_static/binaries/"
+          echo "Copying cached .merged.bin binaries to docs/_static/binaries/"
           mkdir -p docs/_static/binaries
 
           if [ ! -d "docs_binaries" ]; then
@@ -104,15 +104,15 @@ jobs:
             exit 0
           fi
 
-          # Find all .bin files in docs_binaries
-          echo "Processing binary files from macOS builds..."
+          # Find only .merged.bin files in docs_binaries
+          echo "Processing .merged.bin files from macOS builds..."
           
           # Binaries are stored in structure like:
-          # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
+          # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.merged.bin
           # We need to:
           # 1. Extract sketch name and target from path
           # 2. Find the sketch in libraries/ directory
-          # 3. Copy to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
+          # 3. Copy .merged.bin to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
           
           bin_count=0
           skip_count=0
@@ -120,14 +120,11 @@ jobs:
           while IFS= read -r bin_file; do
             echo "Processing: $bin_file"
 
-            # Extract the binary filename (e.g., WiFiClientSecure.ino.bin)
+            # Extract the binary filename (e.g., WiFiClientSecure.ino.merged.bin)
             bin_name=$(basename "$bin_file")
 
-            # Extract sketch name (remove .ino.bin or .bin extension)
-            sketch_name="${bin_name%.ino.bin}"
-            if [ "$sketch_name" == "$bin_name" ]; then
-              sketch_name="${bin_name%.bin}"
-            fi
+            # Extract sketch name (remove .ino.merged.bin extension)
+            sketch_name="${bin_name%.ino.merged.bin}"
 
             # Extract target from path (esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2, esp32p4, esp32c5)
             if [[ "$bin_file" =~ /(esp32[a-z0-9]*)/ ]]; then
@@ -161,23 +158,23 @@ jobs:
             output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
             mkdir -p "$output_dir"
 
-            # Copy the binary
+            # Copy only the .merged.bin file
             cp "$bin_file" "$output_dir/"
             echo "  → Copied to: $output_dir/$bin_name"
             bin_count=$((bin_count + 1))
-          done < <(find docs_binaries -type f -name "*.bin")
+          done < <(find docs_binaries -type f -name "*.merged.bin")
           
           echo ""
           echo "=========================================="
-          echo "Binary copy completed!"
-          echo "  Binaries copied: $bin_count"
-          echo "  Binaries skipped: $skip_count"
+          echo ".merged.bin copy completed!"
+          echo "  .merged.bin files copied: $bin_count"
+          echo "  Files skipped: $skip_count"
           echo "=========================================="
           echo ""
           echo "Final structure in docs/_static/binaries/:"
-          find docs/_static/binaries -type f -name "*.bin" | head -30
+          find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | head -30 || true
           echo ""
-          echo "Total binaries in docs/_static/binaries/: $(find docs/_static/binaries -type f -name "*.bin" | wc -l)"
+          echo "Total .merged.bin files in docs/_static/binaries/: $(find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | wc -l)"
 
       - name: Cleanup Binaries
         run: |
@@ -190,16 +187,16 @@ jobs:
           echo "=========================================="
           if [ -d "docs/_static/binaries" ]; then
             echo "Directory tree:"
-            find docs/_static/binaries -type f | sort
+            find docs/_static/binaries -type f 2>/dev/null | sort || true
             echo ""
             echo "Files by type:"
-            echo "  .bin files: $(find docs/_static/binaries -type f -name "*.bin" | wc -l)"
-            echo "  .elf files: $(find docs/_static/binaries -type f -name "*.elf" | wc -l)"
-            echo "  .json files: $(find docs/_static/binaries -type f -name "*.json" | wc -l)"
-            echo "  .toml files: $(find docs/_static/binaries -type f -name "*.toml" | wc -l)"
+            echo "  .merged.bin files: $(find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | wc -l)"
+            echo "  .json files: $(find docs/_static/binaries -type f -name "*.json" 2>/dev/null | wc -l)"
+            echo "  .toml files: $(find docs/_static/binaries -type f -name "*.toml" 2>/dev/null | wc -l)"
+            echo "  diagram.json files: $(find docs/_static/binaries -type f -name "diagram*.json" 2>/dev/null | wc -l)"
             echo ""
             echo "Example of final structure (first 20 files):"
-            find docs/_static/binaries -type f | head -20
+            find docs/_static/binaries -type f 2>/dev/null | head -20 || true
           else
             echo "WARNING: docs/_static/binaries/ directory not found!"
           fi
