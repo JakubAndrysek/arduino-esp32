@@ -2,9 +2,10 @@ name: Documentation Build and Production Deploy CI
 
 on:
   workflow_run:
-    workflows: ["ESP32 Arduino Release"]
+    workflows: ["ESP32 Arduino Release", "Compilation Tests"]
     types:
       - completed
+  workflow_dispatch:
   push:
     branches:
       - release/v2.x
@@ -39,6 +40,21 @@ jobs:
           cache-dependency-path: docs/requirements.txt
           cache: "pip"
           python-version: "3.10"
+
+      - name: Restore docs binaries from cache (macOS builds)
+        id: cache-restore
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: docs-binaries-macos-${{ github.run_id }}
+          restore-keys: |
+            docs-binaries-macos-
+          path: docs_binaries
+          lookup-only: false
+
+      - name: Prepare cached binaries for documentation
+        run: |
+          python3 .github/scripts/docs_build_examples.py -p
+          python3 .github/scripts/docs_build_examples.py -c
 
       - name: Deploy Documentation
         env:

@@ -1,15 +1,15 @@
 name: Documentation Build and Deploy CI
 
 on:
-  # # Wait for Compilation Tests workflow to complete (uses macOS binaries)
-  # workflow_run:
-  #   workflows: ["Compilation Tests"]
-  #   types:
-  #     - completed
-  #   branches:
-  #     - master
-  #     - release/v2.x
-  #     - wokwi-embed-launchpad
+  # Wait for Compilation Tests workflow to complete (uses macOS binaries)
+  workflow_run:
+    workflows: ["Compilation Tests"]
+    types:
+      - completed
+    branches:
+      - master
+      - release/v2.x
+      - wokwi-embed-launchpad
   # Manual trigger for testing docs changes without waiting for compilation
   workflow_dispatch:
   # Also run on direct pushes to docs or workflow files (for testing)
@@ -57,56 +57,10 @@ jobs:
           path: docs_binaries
           lookup-only: false
 
-      - name: Copy cached binaries to docs/_static/binaries/
+      - name: Prepare cached binaries for documentation
         run: |
-          mkdir -p docs/_static/binaries
-
-          if [ ! -d "docs_binaries" ]; then
-            echo "WARNING: No docs_binaries directory found, continuing without binaries."
-            exit 0
-          fi
-
-          bin_count=0
-          
-          while IFS= read -r bin_file; do
-            bin_name=$(basename "$bin_file")
-            sketch_name="${bin_name%.ino.merged.bin}"
-
-            if [[ "$bin_file" =~ /(esp32[a-z0-9]*)/ ]]; then
-              target="${BASH_REMATCH[1]}"
-            else
-              continue
-            fi
-
-            sketch_ino_file=$(find libraries -type f -name "${sketch_name}.ino" 2>/dev/null | head -1)
-            if [ -z "$sketch_ino_file" ]; then
-              continue
-            fi
-
-            sketch_dir=$(dirname "$sketch_ino_file")
-            relative_path="${sketch_dir#libraries/}"
-            output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
-            mkdir -p "$output_dir"
-
-            cp "$bin_file" "$output_dir/"
-            bin_count=$((bin_count + 1))
-
-            ci_json_file=$(dirname "$bin_file")/ci.json
-            if [ -f "$ci_json_file" ]; then
-              cp "$ci_json_file" "$output_dir/"
-            fi
-          done < <(find docs_binaries -type f -name "*.merged.bin")
-
-      - name: Cleanup Binaries
-        run: |
+          python3 .github/scripts/docs_build_examples.py -p
           python3 .github/scripts/docs_build_examples.py -c
-
-      - name: Show processed projects
-        run: |
-          echo "Projects ready for documentation:"
-          find docs/_static/binaries/libraries -type f -name "*.ino.merged.bin" 2>/dev/null | while read f; do
-            basename "$f" .ino.merged.bin
-          done | sort -u
 
       - name: Build
         run: |

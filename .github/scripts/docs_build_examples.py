@@ -119,6 +119,12 @@ def parse_args(argv):
         help="Clean up docs binaries directory and exit",
     )
     p.add_argument(
+        "-p",
+        dest="prepare_cached",
+        action="store_true",
+        help="Prepare cached binaries from docs_binaries/ to docs/_static/binaries/",
+    )
+    p.add_argument(
         "-d",
         dest="generate_diagrams",
         action="store_true",
@@ -180,6 +186,55 @@ def cleanup_binaries():
             except Exception:
                 pass
     print("Cleanup completed")
+
+
+def prepare_cached_binaries():
+    """Copy cached binaries from docs_binaries/ to docs/_static/binaries/"""
+    import re
+    
+    docs_binaries = Path("docs_binaries")
+    if not docs_binaries.exists():
+        print("WARNING: No docs_binaries directory found, continuing without binaries.")
+        return 0
+    
+    DOCS_BINARIES_DIR.mkdir(parents=True, exist_ok=True)
+    
+    bin_count = 0
+    # Find all .merged.bin files
+    for bin_file in docs_binaries.rglob("*.merged.bin"):
+        bin_name = bin_file.name
+        # Extract sketch name (remove .ino.merged.bin extension)
+        sketch_name = bin_name.replace(".ino.merged.bin", "")
+        
+        # Extract target from path
+        target_match = re.search(r'/(esp32[a-z0-9]*)/', str(bin_file))
+        if not target_match:
+            continue
+        target = target_match.group(1)
+        
+        # Search for the sketch in libraries directory
+        sketch_ino_files = list(Path('libraries').rglob(f'{sketch_name}.ino'))
+        if not sketch_ino_files:
+            continue
+        
+        sketch_ino_file = sketch_ino_files[0]
+        sketch_dir = sketch_ino_file.parent
+        relative_path = str(sketch_dir).replace('libraries/', '', 1)
+        
+        # Create output directory
+        output_dir = DOCS_BINARIES_DIR / "libraries" / relative_path / target
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy the .merged.bin file
+        shutil.copy(bin_file, output_dir / bin_name)
+        bin_count += 1
+        
+        # Also copy ci.json if it exists in the same directory
+        ci_json_file = bin_file.parent / "ci.json"
+        if ci_json_file.exists():
+            shutil.copy(ci_json_file, output_dir / "ci.json")
+    
+    return bin_count
 
 
 def find_examples_with_upload_binary():
@@ -310,6 +365,16 @@ def main(argv):
     args = parse_args(argv)
     if args.cleanup:
         cleanup_binaries()
+        return
+    if args.prepare_cached:
+        bin_count = prepare_cached_binaries()
+        print(f'\nPrepared {bin_count} binaries for documentation')
+        # Show project names
+        print('\nProjects ready for documentation:')
+        merged_bins = list(DOCS_BINARIES_DIR.rglob('*.ino.merged.bin'))
+        project_names = sorted(set(f.name.replace('.ino.merged.bin', '') for f in merged_bins))
+        for name in project_names:
+            print(f'  {name}')
         return
     validate_prerequisites(args)
     GENERATE_DIAGRAMS = args.generate_diagrams
