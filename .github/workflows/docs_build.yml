@@ -1,15 +1,15 @@
 name: Documentation Build and Deploy CI
 
 on:
-  # Wait for Compilation Tests workflow to complete (uses macOS binaries)
-  workflow_run:
-    workflows: ["Compilation Tests"]
-    types:
-      - completed
-    branches:
-      - master
-      - release/v2.x
-      - wokwi-embed-launchpad
+  # # Wait for Compilation Tests workflow to complete (uses macOS binaries)
+  # workflow_run:
+  #   workflows: ["Compilation Tests"]
+  #   types:
+  #     - completed
+  #   branches:
+  #     - master
+  #     - release/v2.x
+  #     - wokwi-embed-launchpad
   # Manual trigger for testing docs changes without waiting for compilation
   workflow_dispatch:
   # Also run on direct pushes to docs or workflow files (for testing)
@@ -51,7 +51,7 @@ jobs:
         id: cache-restore
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          key: docs-binaries-macos-${{ github.event.workflow_run.head_sha || github.sha }}
+          key: docs-binaries-macos-
           restore-keys: |
             docs-binaries-macos-
           path: docs_binaries
@@ -97,37 +97,37 @@ jobs:
         run: |
           echo "Copying cached binaries to docs/_static/binaries/"
           mkdir -p docs/_static/binaries
-          
+
           if [ ! -d "docs_binaries" ]; then
             echo "ERROR: No docs_binaries directory found!"
             echo "Cannot proceed without binaries. Exiting."
             exit 1
           fi
-          
+
           # Find all .bin files in docs_binaries
           echo "Processing binary files from macOS builds..."
           bin_count=0
           skip_count=0
-          
+
           # Binaries are stored in structure like:
           # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
           # We need to:
           # 1. Extract sketch name and target from path
           # 2. Find the sketch in libraries/ directory
           # 3. Copy to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
-          
+
           find docs_binaries -type f -name "*.bin" | while read -r bin_file; do
             echo "Processing: $bin_file"
-            
+
             # Extract the binary filename (e.g., WiFiClientSecure.ino.bin)
             bin_name=$(basename "$bin_file")
-            
+
             # Extract sketch name (remove .ino.bin or .bin extension)
             sketch_name="${bin_name%.ino.bin}"
             if [ "$sketch_name" == "$bin_name" ]; then
               sketch_name="${bin_name%.bin}"
             fi
-            
+
             # Extract target from path (esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2, esp32p4, esp32c5)
             if [[ "$bin_file" =~ /(esp32[a-z0-9]*)/ ]]; then
               target="${BASH_REMATCH[1]}"
@@ -136,36 +136,36 @@ jobs:
               skip_count=$((skip_count + 1))
               continue
             fi
-            
+
             # Search for the sketch in libraries directory
             sketch_ino_file=$(find libraries -type f -name "${sketch_name}.ino" 2>/dev/null | head -1)
-            
+
             if [ -z "$sketch_ino_file" ]; then
               echo "  ⚠ Could not find sketch '${sketch_name}.ino' in libraries/"
               skip_count=$((skip_count + 1))
               continue
             fi
-            
+
             # Extract the relative path from libraries/
             # e.g., libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino
             # becomes: NetworkClientSecure/examples/WiFiClientSecure
             sketch_dir=$(dirname "$sketch_ino_file")
             relative_path="${sketch_dir#libraries/}"
-            
+
             echo "  ✓ Found sketch at: $sketch_ino_file"
             echo "  ✓ Target: $target"
             echo "  ✓ Relative path: $relative_path"
-            
+
             # Create output directory
             output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
             mkdir -p "$output_dir"
-            
+
             # Copy the binary
             cp "$bin_file" "$output_dir/"
             echo "  → Copied to: $output_dir/$bin_name"
             bin_count=$((bin_count + 1))
           done
-          
+
           echo ""
           echo "=========================================="
           echo "Binary copy completed!"
