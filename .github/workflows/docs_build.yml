@@ -74,16 +74,16 @@ jobs:
             echo "✓ docs_binaries directory exists"
             echo ""
             echo "Directory tree (first 50 entries):"
-            find docs_binaries -type f | head -50 | sort
+            find docs_binaries -type f 2>/dev/null | head -50 | sort || true
             echo ""
             echo "Binary files (.bin):"
-            find docs_binaries -type f -name "*.bin" | head -30
+            find docs_binaries -type f -name "*.bin" 2>/dev/null | head -30 || true
             echo ""
             echo "ELF files:"
-            find docs_binaries -type f -name "*.elf" | head -30
+            find docs_binaries -type f -name "*.elf" 2>/dev/null | head -30 || true
             echo ""
-            echo "Total binary files: $(find docs_binaries -type f -name "*.bin" | wc -l)"
-            echo "Total ELF files: $(find docs_binaries -type f -name "*.elf" | wc -l)"
+            echo "Total binary files: $(find docs_binaries -type f -name "*.bin" 2>/dev/null | wc -l)"
+            echo "Total ELF files: $(find docs_binaries -type f -name "*.elf" 2>/dev/null | wc -l)"
             echo ""
             echo "Sample directory structure:"
             ls -la docs_binaries/ || true
