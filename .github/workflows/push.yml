@@ -217,14 +217,10 @@ jobs:
       - name: Collect docs binaries (macOS only)
         if: matrix.os == 'macOS-latest'
         run: |
-          echo "Collecting binaries and ci.json files for documentation from macOS build..."
           mkdir -p docs_binaries
 
           # Find all compiled binaries from the build
           find "$HOME/.arduino/tests" -type f -name "*.bin" 2>/dev/null | while read -r bin_file; do
-            echo "Found binary: $bin_file"
-
-            # Preserve directory structure
             rel_path="${bin_file#$HOME/.arduino/tests/}"
             target_dir="docs_binaries/$(dirname "$rel_path")"
             mkdir -p "$target_dir"
@@ -233,25 +229,16 @@ jobs:
 
           # Also find and copy ci.json files
           find "$HOME/.arduino/tests" -type f -name "ci.json" 2>/dev/null | while read -r ci_file; do
-            echo "Found ci.json: $ci_file"
-
-            # Preserve directory structure
             rel_path="${ci_file#$HOME/.arduino/tests/}"
             target_dir="docs_binaries/$(dirname "$rel_path")"
             mkdir -p "$target_dir"
             cp "$ci_file" "$target_dir/"
           done
 
-          echo ""
-          echo "Collected files for docs:"
-          echo "  Binary files (.bin): $(find docs_binaries -type f -name "*.bin" 2>/dev/null | wc -l)"
-          echo "  Config files (ci.json): $(find docs_binaries -type f -name "ci.json" 2>/dev/null | wc -l)"
-          echo ""
-          echo "Sample binaries:"
-          find docs_binaries -type f -name "*.bin" 2>/dev/null | head -10 || true
-          echo ""
-          echo "Sample ci.json files:"
-          find docs_binaries -type f -name "ci.json" 2>/dev/null | head -10 || true
+          echo "Projects stored for documentation:"
+          find docs_binaries -type f -name "*.ino.merged.bin" 2>/dev/null | while read f; do
+            basename "$f" .ino.merged.bin
+          done | sort -u
 
       - name: Save docs binaries to cache (macOS only)
         if: matrix.os == 'macOS-latest'

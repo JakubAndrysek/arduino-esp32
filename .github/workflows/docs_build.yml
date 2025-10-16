@@ -57,157 +57,56 @@ jobs:
           path: docs_binaries
           lookup-only: false
 
-      # - name: Download docs binaries artifact (fallback)
-      #   if: steps.cache-restore.outputs.cache-hit != 'true'
-      #   uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
-      #   with:
-      #     name: docs-binaries-macos
-      #     path: docs_binaries
-      #   continue-on-error: true
-
-      - name: Debug - List cached binaries structure
-        run: |
-          echo "=========================================="
-          echo "Debugging cached binaries structure (macOS builds)"
-          echo "=========================================="
-          if [ -d "docs_binaries" ]; then
-            echo "✓ docs_binaries directory exists"
-            echo ""
-            echo "Directory tree (first 50 entries):"
-            find docs_binaries -type f 2>/dev/null | head -50 | sort || true
-            echo ""
-            echo "Binary files (.bin):"
-            find docs_binaries -type f -name "*.bin" 2>/dev/null | head -30 || true
-            echo ""
-            echo "ELF files:"
-            find docs_binaries -type f -name "*.elf" 2>/dev/null | head -30 || true
-            echo ""
-            echo "Total binary files: $(find docs_binaries -type f -name "*.bin" 2>/dev/null | wc -l)"
-            echo "Total ELF files: $(find docs_binaries -type f -name "*.elf" 2>/dev/null | wc -l)"
-            echo ""
-            echo "Sample directory structure:"
-            ls -la docs_binaries/ || true
-          else
-            echo "✗ docs_binaries directory NOT found"
-            echo "WARNING: No cached binaries available!"
-          fi
-          echo "=========================================="
-
       - name: Copy cached binaries to docs/_static/binaries/
         run: |
-          echo "Copying cached .merged.bin binaries to docs/_static/binaries/"
           mkdir -p docs/_static/binaries
 
           if [ ! -d "docs_binaries" ]; then
-            echo "WARNING: No docs_binaries directory found!"
-            echo "Continuing anyway - docs will build without binaries."
+            echo "WARNING: No docs_binaries directory found, continuing without binaries."
             exit 0
           fi
 
-          # Find only .merged.bin files in docs_binaries
-          echo "Processing .merged.bin files from macOS builds..."
-          
-          # Binaries are stored in structure like:
-          # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.merged.bin
-          # We need to:
-          # 1. Extract sketch name and target from path
-          # 2. Find the sketch in libraries/ directory
-          # 3. Copy .merged.bin to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
-          
           bin_count=0
-          skip_count=0
           
           while IFS= read -r bin_file; do
-            echo "Processing: $bin_file"
-
-            # Extract the binary filename (e.g., WiFiClientSecure.ino.merged.bin)
             bin_name=$(basename "$bin_file")
-
-            # Extract sketch name (remove .ino.merged.bin extension)
             sketch_name="${bin_name%.ino.merged.bin}"
 
-            # Extract target from path (esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2, esp32p4, esp32c5)
             if [[ "$bin_file" =~ /(esp32[a-z0-9]*)/ ]]; then
               target="${BASH_REMATCH[1]}"
             else
-              echo "  ⚠ Could not determine target from path: $bin_file"
-              skip_count=$((skip_count + 1))
               continue
             fi
 
-            # Search for the sketch in libraries directory
             sketch_ino_file=$(find libraries -type f -name "${sketch_name}.ino" 2>/dev/null | head -1)
-
             if [ -z "$sketch_ino_file" ]; then
-              echo "  ⚠ Could not find sketch '${sketch_name}.ino' in libraries/"
-              skip_count=$((skip_count + 1))
               continue
             fi
 
-            # Extract the relative path from libraries/
-            # e.g., libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino
-            # becomes: NetworkClientSecure/examples/WiFiClientSecure
             sketch_dir=$(dirname "$sketch_ino_file")
             relative_path="${sketch_dir#libraries/}"
-
-            echo "  ✓ Found sketch at: $sketch_ino_file"
-            echo "  ✓ Target: $target"
-            echo "  ✓ Relative path: $relative_path"
-
-            # Create output directory
             output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
             mkdir -p "$output_dir"
 
-            # Copy the .merged.bin file
             cp "$bin_file" "$output_dir/"
-            echo "  → Copied to: $output_dir/$bin_name"
             bin_count=$((bin_count + 1))
 
-            # Also copy ci.json if it exists in the same directory
             ci_json_file=$(dirname "$bin_file")/ci.json
             if [ -f "$ci_json_file" ]; then
               cp "$ci_json_file" "$output_dir/"
-              echo "  → Copied ci.json to: $output_dir/ci.json"
             fi
           done < <(find docs_binaries -type f -name "*.merged.bin")
-          
-          echo ""
-          echo "=========================================="
-          echo ".merged.bin copy completed!"
-          echo "  .merged.bin files copied: $bin_count"
-          echo "  Files skipped: $skip_count"
-          echo "=========================================="
-          echo ""
-          echo "Final structure in docs/_static/binaries/:"
-          find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | head -30 || true
-          echo ""
-          echo "Total .merged.bin files in docs/_static/binaries/: $(find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | wc -l)"
 
       - name: Cleanup Binaries
         run: |
           python3 .github/scripts/docs_build_examples.py -c
 
-      - name: Debug - Final binaries structure after cleanup
+      - name: Show processed projects
         run: |
-          echo "=========================================="
-          echo "Final structure in docs/_static/binaries/ (after cleanup)"
-          echo "=========================================="
-          if [ -d "docs/_static/binaries" ]; then
-            echo "Directory tree:"
-            find docs/_static/binaries -type f 2>/dev/null | sort || true
-            echo ""
-            echo "Files by type:"
-            echo "  .merged.bin files: $(find docs/_static/binaries -type f -name "*.merged.bin" 2>/dev/null | wc -l)"
-            echo "  .json files: $(find docs/_static/binaries -type f -name "*.json" 2>/dev/null | wc -l)"
-            echo "  .toml files: $(find docs/_static/binaries -type f -name "*.toml" 2>/dev/null | wc -l)"
-            echo "  diagram.json files: $(find docs/_static/binaries -type f -name "diagram*.json" 2>/dev/null | wc -l)"
-            echo ""
-            echo "Example of final structure (first 20 files):"
-            find docs/_static/binaries -type f 2>/dev/null | head -20 || true
-          else
-            echo "WARNING: docs/_static/binaries/ directory not found!"
-          fi
-          echo "=========================================="
+          echo "Projects ready for documentation:"
+          find docs/_static/binaries/libraries -type f -name "*.ino.merged.bin" 2>/dev/null | while read f; do
+            basename "$f" .ino.merged.bin
+          done | sort -u
 
       - name: Build
         run: |
