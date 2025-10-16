@@ -348,6 +348,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
+            # Copy ci.json to build directory if it exists
+            if [ -f "$sketchdir/ci.json" ]; then
+                echo "Copying ci.json to build directory: $build_dir"
+                cp "$sketchdir/ci.json" "$build_dir/"
+            fi
+
             if [ -n "$log_compilation" ]; then
                 #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
                 flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
@@ -391,6 +397,13 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
+
+            # Copy ci.json to build directory if it exists
+            if [ -f "$sketchdir/ci.json" ]; then
+                echo "Copying ci.json to build directory: $build_dir"
+                cp "$sketchdir/ci.json" "$build_dir/"
+            fi
+
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
             #     -warnings="all" \
