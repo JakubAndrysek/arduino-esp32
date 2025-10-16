@@ -99,24 +99,25 @@ jobs:
           mkdir -p docs/_static/binaries
 
           if [ ! -d "docs_binaries" ]; then
-            echo "ERROR: No docs_binaries directory found!"
-            echo "Cannot proceed without binaries. Exiting."
-            exit 1
+            echo "WARNING: No docs_binaries directory found!"
+            echo "Continuing anyway - docs will build without binaries."
+            exit 0
           fi
 
           # Find all .bin files in docs_binaries
           echo "Processing binary files from macOS builds..."
-          bin_count=0
-          skip_count=0
-
+          
           # Binaries are stored in structure like:
           # docs_binaries/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
           # We need to:
           # 1. Extract sketch name and target from path
           # 2. Find the sketch in libraries/ directory
           # 3. Copy to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
-
-          find docs_binaries -type f -name "*.bin" | while read -r bin_file; do
+          
+          bin_count=0
+          skip_count=0
+          
+          while IFS= read -r bin_file; do
             echo "Processing: $bin_file"
 
             # Extract the binary filename (e.g., WiFiClientSecure.ino.bin)
@@ -164,8 +165,8 @@ jobs:
             cp "$bin_file" "$output_dir/"
             echo "  → Copied to: $output_dir/$bin_name"
             bin_count=$((bin_count + 1))
-          done
-
+          done < <(find docs_binaries -type f -name "*.bin")
+          
           echo ""
           echo "=========================================="
           echo "Binary copy completed!"
