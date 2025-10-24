@@ -35,6 +35,7 @@ extensions += [  # noqa: F405
     "sphinx_tabs.tabs",
     "sphinx_substitution_extensions",  # For allowing substitutions inside code blocks
     "esp_docs.esp_extensions.dummy_build_system",
+    "esp_docs.generic_extensions.docs_embed",
 ]
 
 # ESP32_DOCS = [

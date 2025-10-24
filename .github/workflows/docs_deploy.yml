@@ -1,6 +1,7 @@
 name: Documentation Build and Production Deploy CI
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["ESP32 Arduino Release"]
     types:
@@ -9,6 +10,7 @@ on:
     branches:
       - release/v2.x
       - master
+      - docs-embed
     paths:
       - "docs/**"
       - ".github/workflows/docs_deploy.yml"
@@ -19,7 +21,7 @@ permissions:
 jobs:
   deploy-prod-docs:
     name: Deploy Documentation on Production
-    if: github.repository == 'espressif/arduino-esp32'
+    # if: github.repository == 'espressif/arduino-esp32'
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -40,6 +42,35 @@ jobs:
           cache-dependency-path: docs/requirements.txt
           cache: "pip"
           python-version: "3.10"
+
+          # Install Arduino CLI and set environment variables
+      - name: Install Arduino CLI
+        run: |
+          source .github/scripts/install-arduino-cli.sh
+          echo "ARDUINO_IDE_PATH=$ARDUINO_IDE_PATH" >> $GITHUB_ENV
+          echo "ARDUINO_USR_PATH=$ARDUINO_USR_PATH" >> $GITHUB_ENV
+
+      # Install ESP32 Arduino Core
+      - name: Install ESP32 Arduino Core
+        run: |
+          source .github/scripts/install-arduino-core-esp32.sh
+
+      # Install Python dependencies needed for docs_build_examples.py
+      - name: Install Python Dependencies
+        run: |
+          sudo apt update
+          sudo apt install python3-pip python3-setuptools
+          cd ./docs
+          PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
+
+          # Build examples using environment variables from install script
+      - name: Build Examples
+        run: |
+          PATH=/home/runner/.local/bin:$PATH python3 .github/scripts/docs_build_examples.py --build --diagram --launchpad
+
+      - name: Cleanup Binaries
+        run: |
+          PATH=/home/runner/.local/bin:$PATH python3 .github/scripts/docs_build_examples.py -c
 
       - name: Deploy Documentation
         env:
