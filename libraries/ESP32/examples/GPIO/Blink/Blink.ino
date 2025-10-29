@@ -1,5 +1,5 @@
-#define LED    12
-#define BUTTON 2
+#define LED    4
+#define BUTTON 0
 
 uint8_t stateLED = 0;
 

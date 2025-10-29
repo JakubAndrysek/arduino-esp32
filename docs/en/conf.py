@@ -33,8 +33,8 @@ language = "en"
 google_analytics_id = "G-F58JM78930"
 
 # Documentation embedding settings
-docs_embed_public_root = "https://docs.espressif.com/projects/arduino-esp32-wokwi-test"
-docs_embed_esp32_relative_root = "../.."
-docs_embed_launchpad_url = "https://espressif.github.io/esp-launchpad/"
-docs_embed_github_base_url = "https://github.com/JakubAndrysek/arduino-esp32"
-docs_embed_github_branch = "docs-embed"
+# docs_embed_public_root = "https://docs.espressif.com/projects/arduino-esp32-wokwi-test"
+# docs_embed_esp32_relative_root = "../.."
+# docs_embed_launchpad_url = "https://espressif.github.io/esp-launchpad/"
+# docs_embed_github_base_url = "https://github.com/JakubAndrysek/arduino-esp32"
+# docs_embed_github_branch = "docs-embed"

@@ -35,17 +35,34 @@ import platform
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+env_config_keys = [
+    "DOCS_EMBED_PUBLIC_ROOT",
+    "DOCS_EMBED_GITHUB_BASE_URL",
+    "DOCS_EMBED_BINARIES_DIR",
+]
+
+# load environment variables
+env_config = {}
+for key in env_config_keys:
+    value = os.environ.get(key)
+    if value is None:
+        raise EnvironmentError(f"{key} environment variable is not set")
+    env_config[key] = value
+
+
+if env_config.get("DOCS_EMBED_BINARIES_DIR"):
+    DOCS_EMBED_BINARIES_PATH = Path(f"docs/{env_config['DOCS_EMBED_BINARIES_DIR']}")
+
 ARDUINO_ESP32_PATH = os.environ.get("ARDUINO_ESP32_PATH")
 GITHUB_WORKSPACE = os.environ.get("GITHUB_WORKSPACE")
-STORAGE_URL_PREFIX = os.environ.get("STORAGE_URL_PREFIX")
-REPO_URL_PREFIX = os.environ.get("REPO_URL_PREFIX")
 
 if ARDUINO_ESP32_PATH and (Path(ARDUINO_ESP32_PATH) / "tools" / "esp32-arduino-libs").is_dir():
     SDKCONFIG_DIR = Path(ARDUINO_ESP32_PATH) / "tools" / "esp32-arduino-libs"
 elif GITHUB_WORKSPACE and (Path(GITHUB_WORKSPACE) / "tools" / "esp32-arduino-libs").is_dir():
     SDKCONFIG_DIR = Path(GITHUB_WORKSPACE) / "tools" / "esp32-arduino-libs"
 else:
-    SDKCONFIG_DIR = Path("tools/esp32-arduino-libs")
+    raise EnvironmentError("Could not locate esp32-arduino-libs directory. "
+                           "Set ARDUINO_ESP32_PATH or GITHUB_WORKSPACE environment variable.")
 
 KEEP_FILES = [
     "*.merged.bin",
@@ -56,8 +73,6 @@ KEEP_FILES = [
 ]
 
 SKETCH_UTILS = SCRIPT_DIR / "sketch_utils.sh"
-DOCS_BINARIES_DIR = Path("docs/_static/binaries")
-
 
 def detect_arduino_paths():
     """Get Arduino CLI and user paths from environment variables set by install-arduino-cli.sh
@@ -269,11 +284,11 @@ def cleanup_binaries():
     Removes all files except those matching patterns in KEEP_FILES.
     Also removes empty directories after cleanup.
     """
-    print(f"Cleaning up binaries directory: {DOCS_BINARIES_DIR}")
-    if not DOCS_BINARIES_DIR.exists():
+    print(f"Cleaning up binaries directory: {DOCS_EMBED_BINARIES_PATH}")
+    if not DOCS_EMBED_BINARIES_PATH.exists():
         print("Binaries directory does not exist, nothing to clean")
         return
-    for root, dirs, files in os.walk(DOCS_BINARIES_DIR):
+    for root, dirs, files in os.walk(DOCS_EMBED_BINARIES_PATH):
         for fname in files:
             fpath = Path(root) / fname
             parent = Path(root).name
@@ -292,7 +307,7 @@ def cleanup_binaries():
             else:
                 print(f"Keeping: {fpath}")
     # remove empty dirs
-    for root, dirs, files in os.walk(DOCS_BINARIES_DIR, topdown=False):
+    for root, dirs, files in os.walk(DOCS_EMBED_BINARIES_PATH, topdown=False):
         if not os.listdir(root):
             try:
                 os.rmdir(root)
@@ -356,7 +371,7 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
         bool: True if build succeeded, False otherwise
     """
     print(f"\n > Building example: {relative_path} for target: {target}")
-    output_dir = DOCS_BINARIES_DIR / relative_path / target
+    output_dir = DOCS_EMBED_BINARIES_PATH / relative_path / target
     output_dir.mkdir(parents=True, exist_ok=True)
 
     sdkconfig = SDKCONFIG_DIR / target / 'sdkconfig'
@@ -405,13 +420,13 @@ def build_all_examples(args):
     total_built = 0
     total_failed = 0
 
-    if DOCS_BINARIES_DIR.exists():
-        shutil.rmtree(DOCS_BINARIES_DIR)
-        print(f"Removed existing build directory: {DOCS_BINARIES_DIR}")
+    if DOCS_EMBED_BINARIES_PATH.exists():
+        shutil.rmtree(DOCS_EMBED_BINARIES_PATH)
+        print(f"Removed existing build directory: {DOCS_EMBED_BINARIES_PATH}")
 
     # add gitignore to binaries dir with * for new files
-    DOCS_BINARIES_DIR.mkdir(parents=True, exist_ok=True)
-    gitignore_path = DOCS_BINARIES_DIR / '.gitignore'
+    DOCS_EMBED_BINARIES_PATH.mkdir(parents=True, exist_ok=True)
+    gitignore_path = DOCS_EMBED_BINARIES_PATH / '.gitignore'
     gitignore_path.write_text("*\n")
 
     examples = find_examples_with_upload_binary()
@@ -444,7 +459,7 @@ def build_all_examples(args):
             else:
                 total_failed += 1
 
-        output_sketch_dir = DOCS_BINARIES_DIR / relative_path
+        output_sketch_dir = DOCS_EMBED_BINARIES_PATH / relative_path
         output_sketch_dir.mkdir(parents=True, exist_ok=True)
 
         # copy sketch ci.yml to output dir - parent of target dirs
@@ -455,15 +470,20 @@ def build_all_examples(args):
         if args.generate_launchpad_config:
             print(f"Generating LaunchPad config for {relative_path}/{target}...")
             try:
-                sync = DiagramSync(output_sketch_dir / target)
-                sync.generate_launchpad_config(STORAGE_URL_PREFIX, REPO_URL_PREFIX, True, output_sketch_dir)
+                sync = DiagramSync(output_sketch_dir)
+                sync.generate_launchpad_config(
+                    env_config['DOCS_EMBED_PUBLIC_ROOT'],
+                    env_config['DOCS_EMBED_GITHUB_BASE_URL'],
+                    True,
+                    output_sketch_dir
+                )
             except Exception as e:
                 print(f"WARNING: Failed to generate LaunchPad config for {relative_path}/{target}: {e}")
 
     print('\nBuild summary:')
     print(f"  Successfully built: {total_built}")
     print(f"  Failed builds: {total_failed}")
-    print(f"  Output directory: {DOCS_BINARIES_DIR}")
+    print(f"  Output directory: {DOCS_EMBED_BINARIES_PATH}")
     return total_failed
 
 

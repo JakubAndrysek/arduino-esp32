@@ -55,7 +55,19 @@ jobs:
           cd ./docs
           PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
 
-          # Build examples using environment variables from install script
+      # Set documentation embedding environment variables
+      - name: Set Documentation Environment Variables
+        run: |
+          # configure env vars for docs_build_examples.py and docs build
+          echo "DOCS_EMBED_GITHUB_BASE_URL=https://github.com/${{ github.repository }}" >> $GITHUB_ENV
+          echo "DOCS_EMBED_GITHUB_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "DOCS_EMBED_PUBLIC_ROOT=https://${{ secrets.DOCS_SERVER }}/${{ secrets.DOCS_PATH }}/en/${{ github.ref_name == 'master' && 'latest' || github.ref_name }}/" >> $GITHUB_ENV
+          echo "DOCS_EMBED_BINARIES_DIR=${{ vars.DOCS_EMBED_BINARIES_DIR }}" >> $GITHUB_ENV
+          echo "DOCS_EMBED_LAUNCHPAD_URL=${{ vars.DOCS_EMBED_LAUNCHPAD_URL }}" >> $GITHUB_ENV
+          echo "DOCS_EMBED_WOKWI_VIEWER_URL=${{ vars.DOCS_EMBED_WOKWI_VIEWER_URL }}" >> $GITHUB_ENV
+          echo "DOCS_EMBED_ABOUT_WOKWI_URL=${{ vars.DOCS_EMBED_ABOUT_WOKWI_URL }}" >> $GITHUB_ENV
+
+      # Build examples using environment variables from install script
       - name: Build Examples
         run: |
           PATH=/home/runner/.local/bin:$PATH python3 .github/scripts/docs_build_examples.py --build --diagram --launchpad
