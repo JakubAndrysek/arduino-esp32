@@ -1,0 +1,53 @@
+upload-binary:
+  targets:
+    - esp32s3
+    - esp32
+  diagram:
+    esp32s3:
+      parts:
+        - type: wokwi-potentiometer
+          id: pot1
+          top: 65.9
+          left: -115.4
+          attrs: {}
+      connections:
+        - - pot1:VCC
+          - esp:3V3.2
+          - red
+          - - v19.2
+            - h47.2
+            - v-115.2
+        - - pot1:SIG
+          - esp:0
+          - green
+          - - v144
+            - h191.6
+            - v-115.2
+        - - esp:GND.1
+          - pot1:GND
+          - black
+          - - h0
+    esp32:
+      parts:
+        - type: wokwi-potentiometer
+          id: pot1
+          top: 37.1
+          left: -125
+          attrs: {}
+      connections:
+        - - pot1:VCC
+          - esp:3V3
+          - red
+          - - v19.2
+            - h47.2
+            - v-96
+        - - pot1:SIG
+          - esp:0
+          - green
+          - - v124.8
+            - h210.8
+            - v-76.8
+        - - esp:GND.1
+          - pot1:GND
+          - black
+          - - h0

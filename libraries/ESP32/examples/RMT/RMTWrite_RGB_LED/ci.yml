@@ -1,0 +1,60 @@
+upload-binary:
+  targets:
+    - esp32h2
+    - esp32
+  diagram:
+    esp32h2:
+      parts:
+        - type: wokwi-neopixel-canvas
+          id: neopixels1
+          top: 80.9
+          left: -186
+          rotate: 270
+          attrs:
+            rows: "4"
+            cols: "8"
+            matrixBrightness: "255"
+      connections:
+        - - esp:4
+          - neopixels1:DIN
+          - green
+          - - h-14.7
+            - v16.03
+        - - esp:5V
+          - neopixels1:VDD
+          - red
+          - - h-14.7
+            - v-21.97
+        - - esp:GND.2
+          - neopixels1:VSS
+          - black
+          - - h-33.9
+            - v-55.37
+    esp32:
+      parts:
+        - type: wokwi-neopixel-canvas
+          id: neopixels1
+          top: 86.3
+          left: 107.6
+          rotate: 90
+          attrs:
+            rows: "4"
+            cols: "8"
+            matrixBrightness: "255"
+      connections:
+        - - esp:4
+          - neopixels1:DIN
+          - green
+          - - h33.64
+            - v-4.2
+        - - esp:5V
+          - neopixels1:VDD
+          - red
+          - - v28.8
+            - h139.39
+            - v-100.6
+        - - esp:GND.2
+          - neopixels1:VSS
+          - black
+          - - h24.04
+            - v106

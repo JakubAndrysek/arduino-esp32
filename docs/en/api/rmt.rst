@@ -17,8 +17,7 @@ To get started with RMT, you can try:
 RMT Write RGB LED
 *****************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/RMT/RMTWrite_RGB_LED/RMTWrite_RGB_LED.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/RMT/RMTWrite_RGB_LED
 
 
 Complete list of `RMT examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/RMT>`_.

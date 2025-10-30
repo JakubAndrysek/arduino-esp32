@@ -1,0 +1,3 @@
+upload-binary:
+  targets:
+    - esp32

@@ -215,10 +215,8 @@ There are 2 examples uses of Timer:
 
 Repeat timer example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Timer/RepeatTimer/RepeatTimer.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/Timer/RepeatTimer
 
 Watchdog timer example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Timer/WatchdogTimer/WatchdogTimer.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/Timer/WatchdogTimer

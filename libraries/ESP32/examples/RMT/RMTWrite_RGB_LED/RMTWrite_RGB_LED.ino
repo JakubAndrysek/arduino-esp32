@@ -23,7 +23,7 @@
 #ifdef PIN_LED_RGB
 #define BUILTIN_RGBLED_PIN PIN_LED_RGB
 #else
-#define BUILTIN_RGBLED_PIN 21  // ESP32 has no builtin RGB LED (PIN_LED_RGB)
+#define BUILTIN_RGBLED_PIN 4  // ESP32 has no builtin RGB LED (PIN_LED_RGB)
 #endif
 
 #define NR_OF_LEDS     8 * 4
