@@ -6,8 +6,8 @@ struct Button {
   bool pressed;
 };
 
-Button button1 = {23, 0, false};
-Button button2 = {18, 0, false};
+Button button1 = {0, 0, false};
+Button button2 = {4, 0, false};
 
 void ARDUINO_ISR_ATTR isr(void *arg) {
   Button *s = static_cast<Button *>(arg);
@@ -26,6 +26,9 @@ void setup() {
   attachInterruptArg(button1.PIN, isr, &button1, FALLING);
   pinMode(button2.PIN, INPUT_PULLUP);
   attachInterrupt(button2.PIN, isr, FALLING);
+
+  Serial.println("Started GPIO Interrupt example.");
+  Serial.printf("Attached two button interrupts on pins %d and %d\n", button1.PIN, button2.PIN);
 }
 
 void loop() {
@@ -41,5 +44,6 @@ void loop() {
   if (millis() - lastMillis > 10000) {
     lastMillis = millis();
     detachInterrupt(button1.PIN);
+    Serial.printf("Detached interrupt for button 1 on pin %d\n", button1.PIN);
   }
 }

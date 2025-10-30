@@ -146,7 +146,7 @@ GPIO Input and Output Modes
 GPIO Interrupt
 **************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/GPIO/GPIOInterrupt/GPIOInterrupt.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/GPIO/GPIOInterrupt
+
 
 .. _datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
