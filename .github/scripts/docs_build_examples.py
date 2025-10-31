@@ -20,7 +20,6 @@ import sys
 from pathlib import Path
 import subprocess
 import yaml
-import platform
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
