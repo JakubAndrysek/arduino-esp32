@@ -1,0 +1,37 @@
+libs:
+  - LiquidCrystal_I2C@2.0.0
+
+upload-binary:
+  targets:
+    - esp32
+  diagram:
+    esp32:
+      parts:
+        - type: wokwi-lcd1602
+          id: lcd1
+          top: 25.6
+          left: 168.8
+          attrs:
+            pins: i2c
+      connections:
+        - - lcd1:GND
+          - esp:GND.2
+          - black
+          - - h-19.2
+            - v-96
+        - - lcd1:VCC
+          - esp:5V
+          - red
+          - - h-28.8
+            - v153.7
+            - h-139.39
+        - - lcd1:SDA
+          - esp:21
+          - green
+          - - h-38.4
+            - v19.4
+        - - lcd1:SCL
+          - esp:22
+          - green
+          - - h-48
+            - v-9.3
