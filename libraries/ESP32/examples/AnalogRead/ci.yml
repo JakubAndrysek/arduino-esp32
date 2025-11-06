@@ -18,7 +18,7 @@ upload-binary:
             - h47.2
             - v-115.2
         - - pot1:SIG
-          - esp:0
+          - esp:2
           - green
           - - v144
             - h191.6
@@ -42,7 +42,7 @@ upload-binary:
             - h47.2
             - v-96
         - - pot1:SIG
-          - esp:0
+          - esp:2
           - green
           - - v124.8
             - h210.8

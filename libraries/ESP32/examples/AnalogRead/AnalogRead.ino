@@ -7,9 +7,9 @@ void setup() {
 }
 
 void loop() {
-  // read the analog / millivolts value for pin 0:
-  int analogValue = analogRead(0);
-  int analogVolts = analogReadMilliVolts(0);
+  // read the analog / millivolts value for pin 2:
+  int analogValue = analogRead(2);
+  int analogVolts = analogReadMilliVolts(2);
 
   // print out the values you read:
   Serial.printf("ADC analog value = %d\n", analogValue);

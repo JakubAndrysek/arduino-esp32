@@ -1,6 +1,5 @@
 libs:
   - LiquidCrystal_I2C@2.0.0
-
 upload-binary:
   targets:
     - esp32
