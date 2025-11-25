@@ -394,6 +394,11 @@ void PPPClass::end(void) {
     Network.postEvent(&arduino_event);
   }
 
+  if (_dce != NULL) {
+    esp_modem_destroy(_dce);
+    _dce = NULL;
+  }
+
   destroyNetif();
 
   if (_ppp_ev_instance != NULL) {
@@ -406,10 +411,10 @@ void PPPClass::end(void) {
   Network.removeEvent(_ppp_event_handle);
   _ppp_event_handle = 0;
 
-  if (_dce != NULL) {
-    esp_modem_destroy(_dce);
-    _dce = NULL;
-  }
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_CTS);
 
   int8_t pin = -1;
   if (_pin_tx != -1) {
@@ -437,6 +442,11 @@ void PPPClass::end(void) {
     _pin_rst = -1;
     perimanClearPinBus(pin);
   }
+
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_TX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RTS, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_CTS, PPPClass::pppDetachBus);
 
   _mode = ESP_MODEM_MODE_COMMAND;
 }
@@ -745,6 +755,30 @@ String PPPClass::cmd(const char *at_command, int timeout) {
     return String();
   }
   return String(out);
+}
+
+bool PPPClass::cmd(const char *at_command, String &response, int timeout) {
+  PPP_CMD_MODE_CHECK(false);
+
+  char out[128] = {0};
+  esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
+  response = String(out);
+
+  if (err != ESP_OK) {
+    log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
+
+    if (err == ESP_FAIL && response.isEmpty()) {
+      response = "ERROR";
+    }
+
+    return false;
+  }
+
+  if (response.isEmpty()) {
+    response = "OK";
+  }
+
+  return true;
 }
 
 size_t PPPClass::printDriverInfo(Print &out) const {
