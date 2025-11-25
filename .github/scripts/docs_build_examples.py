@@ -13,7 +13,7 @@ ci.yml files and builds them for specified targets.
 
 import argparse
 from argparse import RawDescriptionHelpFormatter
-from esp_docs.generic_extensions.docs_embed.tool.wokwi_tool import DiagramSync
+from esp_docs.esp_extensions.docs_embed.tool.wokwi_tool import DiagramSync
 import os
 import shutil
 import sys

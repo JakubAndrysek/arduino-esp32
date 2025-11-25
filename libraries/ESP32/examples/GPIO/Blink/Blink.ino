@@ -15,9 +15,9 @@ void loop() {
   if (digitalRead(BUTTON_PIN) == LOW) {
     // Blink LED while button is held down
     digitalWrite(LED_PIN, HIGH);  // Turn LED on
-    delay(100);                   // Wait 100ms
+    delay(500);                   // Wait 500ms
     digitalWrite(LED_PIN, LOW);   // Turn LED off
-    delay(100);                   // Wait 100ms
+    delay(500);                   // Wait 500ms
   } else {
     // Keep LED off when button is not pressed
     digitalWrite(LED_PIN, LOW);
