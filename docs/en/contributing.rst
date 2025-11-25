@@ -424,6 +424,9 @@ The ``ci.yml`` file is used to specify how the test suite and sketches will hand
   Libraries are installed using the ``arduino-cli lib install`` command, so you can specify libraries by name + version (e.g., ``AudioZero@1.0.0``)
   or by URL (e.g., ``https://github.com/arduino-libraries/WiFi101.git``).
   More information can be found in the `Arduino CLI documentation <https://arduino.github.io/arduino-cli/1.3/commands/arduino-cli_lib_install/>`_.
+* ``upload-binary``: This directive is used ESP-DOCS - Docs Embed to integrate Wokwi simulations into the documentation.
+  Together with custom Sphinx plugin and its directives, it allows embedding Wokwi simulator into the documentation pages with pre-compiled binaries.
+  For more information, please refer to the `ESP-DOCS - Docs Embed contributing guide <https://docs.espressif.com/projects/esp-docs/en/latest/writing-documentation/docs-embed.html>`_.
 
 The ``wifi`` test suite is a good example of how to use the ``ci.yml`` file:
 
