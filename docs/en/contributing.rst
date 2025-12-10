@@ -113,7 +113,7 @@ Also:
 Examples
 ********
 
-All libraries in the Arduino ESP32 core has its own examples. You can found them in the ``libraries/<library_name>/examples/`` folder.
+All libraries in the Arduino ESP32 core have their own examples. You can find them in the ``libraries/<library_name>/examples/`` folder.
 
 The purpose of these examples is to demonstrate how to use the library features and provide a starting point for users.
 
@@ -129,7 +129,7 @@ If you want to show the example in the documentation, you have two options:
 
 .. code-block:: rst
 
-    .. wokwi-example:: libraries/<library_name>/examples/<example_name>/<example_name>.ino
+    .. wokwi-example:: libraries/<library_name>/examples/<example_name>
 
 To enable compiling the example in the CI system, you need to add a ``ci.yml`` file in the same folder as the sketch.
 The ``ci.yml`` file is used to specify some configurations for the CI system, like required configurations, supported targets, and more.
@@ -149,7 +149,7 @@ If you want to add custom diagrams for Wokwi simulations, you can add the ``diag
 The ``<target>`` is the target name (e.g., ``esp32``, ``esp32s3``, etc.). You can create the diagram using ``docs-embed`` tool installed together with documentation building tools.
 
 To create the diagram, run the ``docs-embed init-diagram --platforms esp32`` command in the sketch folder.
-You can edit them and before you run the documentation build command, you have to convert the diagram config to the ``ci.yml`` file format by running:
+Before you run the documentation build command, you have to convert the diagram config to the ``ci.yml`` file format by running:
 
 .. code-block:: bash
 
@@ -157,14 +157,14 @@ You can edit them and before you run the documentation build command, you have t
     # OR
     docs-embed ci-from-diagram --override
 
-There is also opposite command to generate diagram from ``ci.yml`` file:
+There is also an opposite command to generate diagram from ``ci.yml`` file:
 
 .. code-block:: bash
 
     docs-embed diagram-from-ci
 
 
-The documentation building tools is working only with `ci.yml` files, so `diagram.<target>.json` files are just for configuration using GUI tool.
+The documentation building tools is working only with `ci.yml` files, so `diagram.<target>.json` files are just for configuration using a GUI tool.
 
 Please keep in mind that the ``ci.yml`` does not store the chip and its position on the diagram, just the components and their connections (to save space).
 The chip is added automatically and positioned vertically in the center of the diagram (same as the default behavior of the `docs-embed init-diagram` command).

@@ -11,8 +11,7 @@ It processes all sketches that have 'upload-binary' configuration in their
 ci.yml files and builds them for specified targets.
 """
 
-import argparse
-from argparse import RawDescriptionHelpFormatter
+import click
 from esp_docs.esp_extensions.docs_embed.tool.wokwi_tool import DiagramSync
 import os
 import shutil
@@ -70,41 +69,23 @@ KEEP_FILES = [
 SKETCH_UTILS = SCRIPT_DIR / "sketch_utils.sh"
 
 
-def run_sketch_utils(subcommand, *args, check=True, capture_output=False, text=True):
-    """Execute sketch_utils.sh with a controlled subcommand.
-
-    Security:
-      * Uses a fixed script path (SKETCH_UTILS)
-      * Only allows known subcommands
-      * Always calls subprocess.run with shell=False and a list of arguments
-    """
-    allowed_subcommands = {"check_requirements", "install_libs", "build"}
-    if subcommand not in allowed_subcommands:
-        raise ValueError(f"Unsupported sketch_utils.sh subcommand: {subcommand}")
-
-    cmd = [str(SKETCH_UTILS), subcommand]
-    for arg in args:
-        if not isinstance(arg, (str, os.PathLike)):
-            raise ValueError(f"Invalid argument type for sketch_utils.sh: {type(arg)!r}")
-        cmd.append(str(arg))
-
+def run_cmd(cmd, check=True, capture_output=False, text=True):
+    """Execute a shell command with error handling."""
     try:
         return subprocess.run(
-            cmd,
-            check=check,
-            capture_output=capture_output,
-            text=text,
-            shell=False,  # explicit for static analyzers
+            cmd, check=check, capture_output=capture_output, text=text
         )
     except subprocess.CalledProcessError as e:
+        # CalledProcessError is raised only when check=True and the command exits non-zero
         print(f"ERROR: Command failed: {' '.join(cmd)}")
         print(f"Exit code: {e.returncode}")
-        if e.stdout:
+        if hasattr(e, "stdout") and e.stdout:
             print("--- stdout ---")
             print(e.stdout)
-        if e.stderr:
+        if hasattr(e, "stderr") and e.stderr:
             print("--- stderr ---")
             print(e.stderr)
+        # Exit the whole script with the same return code to mimic shell behavior
         sys.exit(e.returncode)
     except FileNotFoundError:
         print(f"ERROR: Command not found: {cmd[0]}")
@@ -121,14 +102,9 @@ def check_requirements(sketch_dir, sdkconfig_path):
     Returns:
         bool: True if requirements are met, False otherwise
     """
+    cmd = [str(SKETCH_UTILS), "check_requirements", sketch_dir, str(sdkconfig_path)]
     try:
-        res = run_sketch_utils(
-            "check_requirements",
-            sketch_dir,
-            str(sdkconfig_path),
-            check=False,
-            capture_output=True,
-        )
+        res = run_cmd(cmd, check=False, capture_output=True)
         return res.returncode == 0
     except Exception:
         return False
@@ -136,88 +112,33 @@ def check_requirements(sketch_dir, sdkconfig_path):
 
 def install_libs(*args):
     """Install Arduino libraries using sketch_utils.sh"""
-    return run_sketch_utils("install_libs", *args, check=False)
+    cmd = [str(SKETCH_UTILS), "install_libs"] + list(args)
+    return run_cmd(cmd, check=False)
 
 
 def build_sketch(args_list):
     """Build a sketch using sketch_utils.sh"""
-    return run_sketch_utils("build", *args_list, check=False)
+    cmd = [str(SKETCH_UTILS), "build"] + args_list
+    return run_cmd(cmd, check=False)
 
 
-def parse_args(argv):
-    """Parse command line arguments"""
-    epilog_text = (
-        "Examples:\n"
-        "  docs_build_examples.py -c                                            # Clean up binaries directory\n"
-        "  docs_build_examples.py --build                                       # Build all examples (use env vars)\n"
-        "  docs_build_examples.py --build -ai /path/to/cli -au /path/to/user    # Build with explicit paths\n"
-        "  docs_build_examples.py --build --diagram --launchpad                 # Build with diagrams and LaunchPad (with env vars)\n\n"
-        "Path detection:\n"
-        "  All paths can be set via environment variables or command line options.\n"
-        "  ARDUINO_IDE_PATH and ARDUINO_USR_PATH environment variables are used by default.\n"
-        "  Set by running install-arduino-cli.sh first, or use -ai/-au to override\n\n"
-    )
-
-    p = argparse.ArgumentParser(
-        description="Build examples that have ci.yml with upload-binary targets",
-        formatter_class=RawDescriptionHelpFormatter,
-        epilog=epilog_text,
-    )
-    p.add_argument(
-        "-c",
-        "--cleanup",
-        dest="cleanup",
-        action="store_true",
-        help="Clean up docs binaries directory and exit",
-    )
-    p.add_argument(
-        "-ai",
-        "--arduino-cli-path",
-        dest="arduino_cli_path",
-        help="Path to Arduino CLI installation directory (overrides ARDUINO_IDE_PATH env var)",
-    )
-    p.add_argument(
-        "-au",
-        "--arduino-user-path",
-        dest="user_path",
-        help="Path to Arduino user directory (overrides ARDUINO_USR_PATH env var)",
-    )
-    p.add_argument(
-        "-b",
-        "--build",
-        dest="build",
-        action="store_true",
-        help="Build all examples",
-    )
-    p.add_argument(
-        "-d",
-        "--diagram",
-        dest="generate_diagrams",
-        action="store_true",
-        help="Generate diagrams for prepared examples using docs-embed",
-    )
-    p.add_argument(
-        "-l",
-        "--launchpad",
-        dest="generate_launchpad_config",
-        action="store_true",
-        help="Generate LaunchPad config for prepared examples",
-    )
-    return p.parse_args(argv)
 
 
-def validate_prerequisites(args):
-    """Validate that required prerequisites are available and get paths from env vars if needed."""
-
+def validate_prerequisites(arduino_cli_path, user_path):
+    """Validate that required prerequisites are available and get paths from env vars if needed.
+    
+    Returns:
+        tuple: (arduino_cli_path, user_path) with values from env vars if not provided
+    """
     # Get paths from environment variables if not provided via arguments
-    if not args.arduino_cli_path or not args.user_path:
+    if not arduino_cli_path or not user_path:
         print("Getting Arduino paths from environment variables...")
         arduino_ide_path = os.environ.get("ARDUINO_IDE_PATH")
         arduino_usr_path = os.environ.get("ARDUINO_USR_PATH")
 
-        if not args.arduino_cli_path:
+        if not arduino_cli_path:
             if arduino_ide_path:
-                args.arduino_cli_path = arduino_ide_path
+                arduino_cli_path = arduino_ide_path
                 print(f"  Arduino CLI path (ARDUINO_IDE_PATH): {arduino_ide_path}")
             else:
                 print(
@@ -226,9 +147,9 @@ def validate_prerequisites(args):
                 print("Run install-arduino-cli.sh first to set environment variables")
                 sys.exit(1)
 
-        if not args.user_path:
+        if not user_path:
             if arduino_usr_path:
-                args.user_path = arduino_usr_path
+                user_path = arduino_usr_path
                 print(f"  Arduino user path (ARDUINO_USR_PATH): {arduino_usr_path}")
             else:
                 print(
@@ -238,14 +159,16 @@ def validate_prerequisites(args):
                 sys.exit(1)
 
     # Create Arduino user path if it doesn't exist
-    user_path = Path(args.user_path)
-    if not user_path.is_dir():
+    user_path_obj = Path(user_path)
+    if not user_path_obj.is_dir():
         try:
-            user_path.mkdir(parents=True, exist_ok=True)
-            print(f"Created Arduino user directory: {user_path}")
+            user_path_obj.mkdir(parents=True, exist_ok=True)
+            print(f"Created Arduino user directory: {user_path_obj}")
         except Exception as e:
-            print(f"ERROR: Failed to create Arduino user path {user_path}: {e}")
+            print(f"ERROR: Failed to create Arduino user path {user_path_obj}: {e}")
             sys.exit(1)
+    
+    return arduino_cli_path, user_path
 
 
 def cleanup_binaries():
@@ -281,8 +204,8 @@ def cleanup_binaries():
         if not os.listdir(root):
             try:
                 os.rmdir(root)
-            except Exception as e:
-                print(f"WARNING: Failed to remove empty directory {root}: {e}")
+            except Exception:
+                pass
     print("Cleanup completed")
 
 
@@ -305,8 +228,7 @@ def find_examples_with_upload_binary():
                 data = yaml.safe_load(ci_yml.read_text())
                 if "upload-binary" in data and data["upload-binary"]:
                     res.append(str(ino))
-            except Exception as e:
-                print(f"WARNING: Failed to parse ci.yml for {ci_yml}: {e}")
+            except Exception:
                 continue
     return res
 
@@ -329,14 +251,16 @@ def get_upload_binary_targets(sketch_dir):
         return []
 
 
-def build_example_for_target(sketch_dir, target, relative_path, args):
+def build_example_for_target(sketch_dir, target, relative_path, arduino_cli_path, user_path, generate_diagrams):
     """Build a single example for a specific target.
 
     Args:
         sketch_dir (Path): Path to the sketch directory
         target (str): Target board/configuration name
         relative_path (str): Relative path for output organization
-        args (argparse.Namespace): Parsed command line arguments
+        arduino_cli_path (str): Path to Arduino CLI installation directory
+        user_path (str): Path to Arduino user directory
+        generate_diagrams (bool): Whether to generate diagrams
 
     Returns:
         bool: True if build succeeded, False otherwise
@@ -355,9 +279,9 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
     # Build the sketch using sketch_utils.sh build - pass args as in shell script
     build_args = [
         "-ai",
-        args.arduino_cli_path,
+        arduino_cli_path,
         "-au",
-        args.user_path,
+        user_path,
         "-s",
         str(sketch_dir),
         "-t",
@@ -372,7 +296,7 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
         ci_yml = Path(sketch_dir) / "ci.yml"
         if ci_yml.exists():
             shutil.copy(ci_yml, output_dir / "ci.yml")
-        if args.generate_diagrams:
+        if generate_diagrams:
             print(f"Generating diagram for {relative_path} ({target})...")
             try:
                 sync = DiagramSync(output_dir)
@@ -387,7 +311,7 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
     return True
 
 
-def build_all_examples(args):
+def build_all_examples(arduino_cli_path, user_path, generate_diagrams, generate_launchpad_config):
     """Build all examples that have upload-binary configuration
 
     Prerequisites are validated in main() before calling this function
@@ -428,7 +352,7 @@ def build_all_examples(args):
             continue
         print(f"Building {relative_path} for targets: {targets}")
         for target in targets:
-            if build_example_for_target(sketch_dir, target, relative_path, args):
+            if build_example_for_target(sketch_dir, target, relative_path, arduino_cli_path, user_path, generate_diagrams):
                 total_built += 1
             else:
                 total_failed += 1
@@ -441,7 +365,7 @@ def build_all_examples(args):
         if ci_yml.exists():
             shutil.copy(ci_yml, output_sketch_dir / "ci.yml")
 
-        if args.generate_launchpad_config:
+        if generate_launchpad_config:
             print(f"Generating LaunchPad config for {relative_path}/{target}...")
             try:
                 sync = DiagramSync(output_sketch_dir)
@@ -463,19 +387,63 @@ def build_all_examples(args):
     return total_failed
 
 
-def main(argv):
-    """Main entry point for the script"""
-    args = parse_args(argv)
+@click.command(
+    help="""Build examples that have ci.yml with upload-binary targets.
+    
+\b
+Examples:
+  docs_build_examples.py -c                                            # Clean up binaries directory
+  docs_build_examples.py --build                                       # Build all examples (use env vars)
+  docs_build_examples.py --build -ai /path/to/cli -au /path/to/user    # Build with explicit paths
+  docs_build_examples.py --build --diagram --launchpad                 # Build with diagrams and LaunchPad (with env vars)
 
-    if args.cleanup:
+\b
+Path detection:
+  All paths can be set via environment variables or command line options.
+  ARDUINO_IDE_PATH and ARDUINO_USR_PATH environment variables are used by default.
+  Set by running install-arduino-cli.sh first, or use -ai/-au to override
+""")
+@click.option(
+    "-c", "--cleanup",
+    is_flag=True,
+    help="Clean up docs binaries directory and exit"
+)
+@click.option(
+    "-ai", "--arduino-cli-path",
+    default=None,
+    help="Path to Arduino CLI installation directory (overrides ARDUINO_IDE_PATH env var)"
+)
+@click.option(
+    "-au", "--arduino-user-path",
+    default=None,
+    help="Path to Arduino user directory (overrides ARDUINO_USR_PATH env var)"
+)
+@click.option(
+    "-b", "--build",
+    is_flag=True,
+    help="Build all examples"
+)
+@click.option(
+    "-d", "--diagram",
+    is_flag=True,
+    help="Generate diagrams for prepared examples using docs-embed"
+)
+@click.option(
+    "-l", "--launchpad",
+    is_flag=True,
+    help="Generate LaunchPad config for prepared examples"
+)
+def main(cleanup, arduino_cli_path, arduino_user_path, build, diagram, launchpad):
+    """Main entry point for the script"""
+    if cleanup:
         cleanup_binaries()
         return
 
-    if args.build:
+    if build:
         # Validate prerequisites and auto-detect paths if needed
-        validate_prerequisites(args)
+        arduino_cli_path, arduino_user_path = validate_prerequisites(arduino_cli_path, arduino_user_path)
 
-        result = build_all_examples(args)
+        result = build_all_examples(arduino_cli_path, arduino_user_path, diagram, launchpad)
         if result == 0:
             print("\nAll examples built successfully!")
         else:
@@ -483,15 +451,16 @@ def main(argv):
             sys.exit(1)
         return
 
-    if args.generate_diagrams or args.generate_launchpad_config:
+    if diagram or launchpad:
         print(
             "ERROR: --diagram and --launchpad options are only available when building examples (--build)"
         )
         sys.exit(1)
 
     # If no specific action is requested, show help
-    parse_args(["--help"])
+    ctx = click.get_current_context()
+    click.echo(ctx.get_help())
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
