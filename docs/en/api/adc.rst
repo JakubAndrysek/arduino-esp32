@@ -274,8 +274,7 @@ Example Applications
 
 Here is an example of how to use the ADC in OneShot mode or you can run Arduino example 01.Basics -> AnalogReadSerial.
 
-.. literalinclude:: ../../../libraries/ESP32/examples/AnalogRead/AnalogRead.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/AnalogRead
 
 Here is an example of how to use the ADC in Continuous mode.
 

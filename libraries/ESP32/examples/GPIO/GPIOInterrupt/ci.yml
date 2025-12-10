@@ -1,0 +1,122 @@
+upload-binary:
+  targets:
+    - esp32s3
+    - esp32h2
+    - esp32
+  diagram:
+    esp32s3:
+      parts:
+        - type: wokwi-pushbutton
+          id: btn1
+          top: 140.6
+          left: 115.2
+          attrs:
+            color: green
+        - type: wokwi-pushbutton
+          id: btn2
+          top: 73.4
+          left: 115.2
+          attrs:
+            color: green
+            xray: "1"
+      connections:
+        - - btn1:1.l
+          - esp:0
+          - blue
+          - - h-19.2
+            - v0
+            - h-4.57
+        - - esp:GND.3
+          - btn1:2.r
+          - black
+          - - h119.77
+            - v-48.18
+            - h-9.6
+        - - esp:GND.3
+          - btn2:2.r
+          - black
+          - - h119.77
+            - v-76.98
+        - - esp:4
+          - btn2:1.l
+          - green
+          - - h-33.88
+            - v-76.98
+            - h134.4
+            - v105.6
+    esp32h2:
+      parts:
+        - type: wokwi-pushbutton
+          id: btn1
+          top: 35
+          left: -115.2
+          attrs:
+            color: green
+            xray: "1"
+        - type: wokwi-pushbutton
+          id: btn2
+          top: 92.6
+          left: -115.2
+          attrs:
+            color: green
+            xray: "1"
+      connections:
+        - - esp:GND.2
+          - btn2:2.l
+          - black
+          - - h-129.9
+            - v-26.57
+        - - esp:GND.2
+          - btn1:2.l
+          - black
+          - - h-129.9
+            - v-84.17
+        - - esp:0
+          - btn1:1.r
+          - green
+          - - h0
+        - - esp:4
+          - btn2:1.r
+          - green
+          - - h-53.1
+            - v2.23
+            - h-0.2
+    esp32:
+      parts:
+        - type: wokwi-pushbutton
+          id: btn1
+          top: 140.6
+          left: 144
+          attrs:
+            color: green
+        - type: wokwi-pushbutton
+          id: btn2
+          top: 83
+          left: 144
+          attrs:
+            color: green
+            xray: "1"
+      connections:
+        - - btn1:1.l
+          - esp:0
+          - blue
+          - - h-19.2
+            - v-19.2
+        - - btn1:2.r
+          - esp:GND.1
+          - black
+          - - h19.4
+            - v48.2
+            - h-240
+            - v-67.2
+        - - esp:4
+          - btn2:2.l
+          - green
+          - - h24.04
+            - v-28.8
+        - - esp:GND.2
+          - btn2:1.r
+          - black
+          - - v0
+            - h120.04
+            - v67.2

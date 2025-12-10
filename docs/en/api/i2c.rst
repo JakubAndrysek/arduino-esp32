@@ -509,3 +509,17 @@ Here is an example of how to use the I2C in Slave Mode.
     :language: arduino
 
 .. _Arduino Wire Library: https://www.arduino.cc/en/reference/wire
+
+
+External libraries - examples
+*****************************
+
+
+LiquidCrystal_I2C
+^^^^^^^^^^^^^^^^^
+
+This example demonstrates how to use the `LiquidCrystal_I2C`_ library to control an LCD display via I2C.
+
+.. wokwi-example:: libraries/Wire/examples/LiquidCrystal_I2C
+
+.. _LiquidCrystal_I2C: https://github.com/johnrickman/LiquidCrystal_I2C

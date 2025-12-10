@@ -141,30 +141,12 @@ Example Code
 GPIO Input and Output Modes
 ***************************
 
-.. code-block:: arduino
-
-  #define LED    12
-  #define BUTTON 2
-
-  uint8_t stateLED = 0;
-
-    void setup() {
-        pinMode(LED, OUTPUT);
-        pinMode(BUTTON,INPUT_PULLUP);
-    }
-
-    void loop() {
-
-       if(!digitalRead(BUTTON)){
-         stateLED = stateLED^1;
-        digitalWrite(LED,stateLED);
-      }
-    }
+.. wokwi-example:: libraries/ESP32/examples/GPIO/Blink
 
 GPIO Interrupt
 **************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/GPIO/GPIOInterrupt/GPIOInterrupt.ino
-    :language: arduino
+.. wokwi-example:: libraries/ESP32/examples/GPIO/GPIOInterrupt
+
 
 .. _datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
