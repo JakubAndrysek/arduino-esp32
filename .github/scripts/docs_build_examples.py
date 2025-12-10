@@ -70,23 +70,41 @@ KEEP_FILES = [
 SKETCH_UTILS = SCRIPT_DIR / "sketch_utils.sh"
 
 
-def run_cmd(cmd, check=True, capture_output=False, text=True):
-    """Execute a shell command with error handling."""
+def run_sketch_utils(subcommand, *args, check=True, capture_output=False, text=True):
+    """Execute sketch_utils.sh with a controlled subcommand.
+
+    Security:
+      * Uses a fixed script path (SKETCH_UTILS)
+      * Only allows known subcommands
+      * Always calls subprocess.run with shell=False and a list of arguments
+    """
+    allowed_subcommands = {"check_requirements", "install_libs", "build"}
+    if subcommand not in allowed_subcommands:
+        raise ValueError(f"Unsupported sketch_utils.sh subcommand: {subcommand}")
+
+    cmd = [str(SKETCH_UTILS), subcommand]
+    for arg in args:
+        if not isinstance(arg, (str, os.PathLike)):
+            raise ValueError(f"Invalid argument type for sketch_utils.sh: {type(arg)!r}")
+        cmd.append(str(arg))
+
     try:
         return subprocess.run(
-            cmd, check=check, capture_output=capture_output, text=text
+            cmd,
+            check=check,
+            capture_output=capture_output,
+            text=text,
+            shell=False,  # explicit for static analyzers
         )
     except subprocess.CalledProcessError as e:
-        # CalledProcessError is raised only when check=True and the command exits non-zero
         print(f"ERROR: Command failed: {' '.join(cmd)}")
         print(f"Exit code: {e.returncode}")
-        if hasattr(e, "stdout") and e.stdout:
+        if e.stdout:
             print("--- stdout ---")
             print(e.stdout)
-        if hasattr(e, "stderr") and e.stderr:
+        if e.stderr:
             print("--- stderr ---")
             print(e.stderr)
-        # Exit the whole script with the same return code to mimic shell behavior
         sys.exit(e.returncode)
     except FileNotFoundError:
         print(f"ERROR: Command not found: {cmd[0]}")
@@ -103,9 +121,14 @@ def check_requirements(sketch_dir, sdkconfig_path):
     Returns:
         bool: True if requirements are met, False otherwise
     """
-    cmd = [str(SKETCH_UTILS), "check_requirements", sketch_dir, str(sdkconfig_path)]
     try:
-        res = run_cmd(cmd, check=False, capture_output=True)
+        res = run_sketch_utils(
+            "check_requirements",
+            sketch_dir,
+            str(sdkconfig_path),
+            check=False,
+            capture_output=True,
+        )
         return res.returncode == 0
     except Exception:
         return False
@@ -113,14 +136,12 @@ def check_requirements(sketch_dir, sdkconfig_path):
 
 def install_libs(*args):
     """Install Arduino libraries using sketch_utils.sh"""
-    cmd = [str(SKETCH_UTILS), "install_libs"] + list(args)
-    return run_cmd(cmd, check=False)
+    return run_sketch_utils("install_libs", *args, check=False)
 
 
 def build_sketch(args_list):
     """Build a sketch using sketch_utils.sh"""
-    cmd = [str(SKETCH_UTILS), "build"] + args_list
-    return run_cmd(cmd, check=False)
+    return run_sketch_utils("build", *args_list, check=False)
 
 
 def parse_args(argv):
@@ -260,8 +281,8 @@ def cleanup_binaries():
         if not os.listdir(root):
             try:
                 os.rmdir(root)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"WARNING: Failed to remove empty directory {root}: {e}")
     print("Cleanup completed")
 
 
@@ -284,7 +305,8 @@ def find_examples_with_upload_binary():
                 data = yaml.safe_load(ci_yml.read_text())
                 if "upload-binary" in data and data["upload-binary"]:
                     res.append(str(ino))
-            except Exception:
+            except Exception as e:
+                print(f"WARNING: Failed to parse ci.yml for {ci_yml}: {e}")
                 continue
     return res
 

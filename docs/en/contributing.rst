@@ -109,6 +109,93 @@ Also:
     const char * WIFI_FTM_SSID = "WiFi_FTM_Responder"; // SSID of AP that has FTM Enabled
     const char * WIFI_FTM_PASS = "ftm_responder"; // STA Password
 
+
+Examples
+********
+
+All libraries in the Arduino ESP32 core has its own examples. You can found them in the ``libraries/<library_name>/examples/`` folder.
+
+The purpose of these examples is to demonstrate how to use the library features and provide a starting point for users.
+
+If you want to show the example in the documentation, you have two options:
+1. link just the source code file in the documentation using the ``literalinclude`` directive:
+
+.. code-block:: rst
+
+    .. literalinclude:: ../../../libraries/<library_name>/examples/<example_name>/<example_name>.ino
+      :language: arduino
+
+2. Source code with Wokwi simulation embedded in the documentation using the ``wokwi-example`` directive:
+
+.. code-block:: rst
+
+    .. wokwi-example:: libraries/<library_name>/examples/<example_name>/<example_name>.ino
+
+To enable compiling the example in the CI system, you need to add a ``ci.yml`` file in the same folder as the sketch.
+The ``ci.yml`` file is used to specify some configurations for the CI system, like required configurations, supported targets, and more.
+You can enable compilation of the example by adding targets under the ``upload-binary`` directive in the ``ci.yml`` file.
+
+Here is an example of a ``ci.yml`` file that enables compilation for ESP32 and ESP32-S3 targets.
+This configuration adds default diagrams for Wokwi simulations with just dev boards.
+
+.. code-block:: yaml
+
+    upload-binary:
+      targets:
+        - esp32
+        - esp32s3
+
+If you want to add custom diagrams for Wokwi simulations, you can add the ``diagram.<target>.json`` file in the same folder as the sketch.
+The ``<target>`` is the target name (e.g., ``esp32``, ``esp32s3``, etc.). You can create the diagram using ``docs-embed`` tool installed together with documentation building tools.
+
+To create the diagram, run the ``docs-embed init-diagram --platforms esp32`` command in the sketch folder.
+You can edit them and before you run the documentation build command, you have to convert the diagram config to the ``ci.yml`` file format by running:
+
+.. code-block:: bash
+
+    docs-embed ci-from-diagram
+    # OR
+    docs-embed ci-from-diagram --override
+
+There is also opposite command to generate diagram from ``ci.yml`` file:
+
+.. code-block:: bash
+
+    docs-embed diagram-from-ci
+
+
+The documentation building tools is working only with `ci.yml` files, so `diagram.<target>.json` files are just for configuration using GUI tool.
+
+Please keep in mind that the ``ci.yml`` does not store the chip and its position on the diagram, just the components and their connections (to save space).
+The chip is added automatically and positioned vertically in the center of the diagram (same as the default behavior of the `docs-embed init-diagram` command).
+
+To run the documentation build command locally and in the CI system, you need to add those environment variables:
+
+* ``DOCS_EMBED_ABOUT_WOKWI_URL``: URL to the info about Wokwi (default: ``https://docs.espressif.com/projects/arduino-esp32/en/latest/third_party/wokwi.html``)
+* ``DOCS_EMBED_BINARIES_DIR``: Path to the folder where the pre-compiled binaries are stored (default: ``_static/binaries``)
+* ``DOCS_EMBED_LAUNCHPAD_URL``: URL to the launchpad page (default: ``https://espressif.github.io/esp-launchpad/``)
+* ``DOCS_EMBED_WOKWI_VIEWER_URL``: URL to the Wokwi iframe viewer (default: ``https://wokwi.com/experimental/viewer``)
+
+
+CI/CD
+*****
+
+This repository uses GitHub Actions for Continuous Integration and Continuous Deployment (CI/CD).
+If you forked the repository, you can enable them under the `Actions` tab in your forked repository.
+
+To enable building the documentation, you need to set up additional secrets and environment variables in your forked repository.
+
+Secrets
+^^^^^^^^^^^^
+* ``DOCS_SERVER``: The server where the documentation will be deployed
+* ``DOCS_PATH``: The path where the documentation will be deployed on the server
+
+
+Variables
+^^^^^^^^^
+
+They are described above in the `Examples` section.
+
 Testing
 *******
 
